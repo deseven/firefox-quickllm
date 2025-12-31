@@ -2,12 +2,12 @@
 import './settings.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as bootstrap from 'bootstrap';
-import { applyTheme, loadProfiles, saveProfiles, getThemeSetting, saveThemeSetting } from '../../utils/utils.js';
+import { applyTheme, loadProfiles, saveProfiles, getThemeSetting, saveThemeSetting, handleThemeChange, getThemeDisplayName, getExtensionInfo } from '../../utils/utils.js';
 
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
 
-// Static encryption key
+// Static encryption key (just to protect the api keys in the exported file)
 const ENCRYPTION_KEY = 'Afo1ne7oot8Cemaicie7yeish8weiBie';
 
 class SettingsManager {
@@ -33,35 +33,24 @@ class SettingsManager {
     }
 
     async loadExtensionInfo() {
-        try {
-            // Get extension info from chrome.runtime API
-            const manifest = chrome.runtime.getManifest();
-            
-            // Update the extension name in the DOM
-            const nameElement = document.getElementById('extensionName');
-            if (nameElement && manifest.name) {
-                nameElement.textContent = manifest.name;
-            }
-            
-            // Update version - try to get from manifest, fallback to DEV
-            const versionElement = document.getElementById('extensionVersion');
-            if (versionElement) {
-                const version = (manifest && manifest.version) ? manifest.version : 'DEV';
-                versionElement.textContent = version;
-            }
-            
-            // Update license text
-            const licenseElement = document.getElementById('licenseText');
-            if (licenseElement && process.env.EXTENSION_LICENSE) {
-                licenseElement.textContent = process.env.EXTENSION_LICENSE;
-            }
-        } catch (error) {
-            console.warn('Could not load extension info:', error);
-            // Fallback to DEV if everything fails
-            const versionElement = document.getElementById('extensionVersion');
-            if (versionElement) {
-                versionElement.textContent = 'DEV';
-            }
+        const extensionInfo = getExtensionInfo();
+        
+        // Update the extension name in the DOM
+        const nameElement = document.getElementById('extensionName');
+        if (nameElement) {
+            nameElement.textContent = extensionInfo.name;
+        }
+        
+        // Update version
+        const versionElement = document.getElementById('extensionVersion');
+        if (versionElement) {
+            versionElement.textContent = extensionInfo.version;
+        }
+        
+        // Update license text
+        const licenseElement = document.getElementById('licenseText');
+        if (licenseElement && process.env.EXTENSION_LICENSE) {
+            licenseElement.textContent = process.env.EXTENSION_LICENSE;
         }
     }
 
@@ -92,12 +81,10 @@ class SettingsManager {
     }
 
     async handleThemeChange(theme) {
-        try {
-            await saveThemeSetting(theme);
-            await applyTheme();
-            this.showStatus(`Theme changed to ${theme === 'auto' ? 'Auto (System)' : theme === 'light' ? 'Light' : 'Dark'}.`, 'success');
-        } catch (error) {
-            console.error('Error saving theme setting:', error);
+        const success = await handleThemeChange(theme);
+        if (success) {
+            this.showStatus(`Theme changed to ${getThemeDisplayName(theme)}.`, 'success');
+        } else {
             this.showStatus('Error saving theme setting. Please try again.', 'danger');
         }
     }

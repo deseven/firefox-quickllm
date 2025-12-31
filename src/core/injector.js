@@ -1,6 +1,5 @@
 // Content script for QuickLLM extension
-import { escapeHtml, prefersDarkMode } from '../utils/utils.js';
-import markdownRenderer from '../utils/markdown-renderer.js';
+import { escapeHtml, prefersDarkMode, createElement, clearElement, renderMarkdownToElement, createLoadingElement, showErrorState } from '../utils/utils.js';
 import ShadowModal from '../utils/shadow-modal.js';
 import TurndownService from 'turndown';
 
@@ -10,59 +9,6 @@ class ContentManager {
         this.currentElement = null;
         this.currentStreamId = null;
         this.init();
-    }
-
-    // Helper function to create DOM elements programmatically
-    createElement(tag, options = {}) {
-        const element = document.createElement(tag);
-        
-        if (options.className) element.className = options.className;
-        if (options.id) element.id = options.id;
-        if (options.textContent) element.textContent = options.textContent;
-        if (options.style) {
-            if (typeof options.style === 'string') {
-                element.style.cssText = options.style;
-            } else {
-                Object.assign(element.style, options.style);
-            }
-        }
-        if (options.attributes) {
-            Object.entries(options.attributes).forEach(([key, value]) => {
-                element.setAttribute(key, value);
-            });
-        }
-        if (options.children) {
-            options.children.forEach(child => {
-                if (typeof child === 'string') {
-                    element.appendChild(document.createTextNode(child));
-                } else {
-                    element.appendChild(child);
-                }
-            });
-        }
-        
-        return element;
-    }
-
-    // Helper to safely render markdown content to DOM
-    renderMarkdownToElement(content, targetElement) {
-        // Clear existing content
-        while (targetElement.firstChild) {
-            targetElement.removeChild(targetElement.firstChild);
-        }
-        
-        // Render markdown and create a temporary container
-        const renderedContent = markdownRenderer.render(content);
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(renderedContent, 'text/html');
-        
-        // Move all children from parsed document to target element
-        const bodyChildren = Array.from(doc.body.childNodes);
-        bodyChildren.forEach(child => {
-            targetElement.appendChild(child);
-        });
-        
-        targetElement.classList.add('markdown-content');
     }
 
     init() {
@@ -108,7 +54,6 @@ class ContentManager {
         const selection = window.getSelection();
         return selection.toString().trim();
     }
-
 
     getPageText() {
         // Get main content, avoiding navigation, ads, etc.
@@ -211,15 +156,15 @@ class ContentManager {
         const shouldProcessImmediately = profile.processImmediately && !bypassProcessImmediately;
         
         const createModalContent = () => {
-            const modalContent = this.createElement('div', { className: 'quickllm-modal-content' });
+            const modalContent = createElement('div', { className: 'quickllm-modal-content' });
             
             // Header
-            const header = this.createElement('div', { className: 'quickllm-modal-header' });
-            const title = this.createElement('h3', {
+            const header = createElement('div', { className: 'quickllm-modal-header' });
+            const title = createElement('h3', {
                 className: 'quickllm-modal-title',
                 textContent: `Process ${textType}`
             });
-            const closeBtn = this.createElement('button', {
+            const closeBtn = createElement('button', {
                 className: 'quickllm-close-btn',
                 textContent: '×'
             });
@@ -227,18 +172,18 @@ class ContentManager {
             header.appendChild(closeBtn);
             
             // Body
-            const body = this.createElement('div', { className: 'quickllm-modal-body' });
+            const body = createElement('div', { className: 'quickllm-modal-body' });
             
             // Left side
-            const leftSide = this.createElement('div', { className: 'quickllm-modal-left' });
+            const leftSide = createElement('div', { className: 'quickllm-modal-left' });
             
             // Text to process
-            const textGroup = this.createElement('div', { className: 'quickllm-form-group' });
-            const textLabel = this.createElement('label', {
+            const textGroup = createElement('div', { className: 'quickllm-form-group' });
+            const textLabel = createElement('label', {
                 className: 'quickllm-label',
                 textContent: 'Text to process:'
             });
-            const textPreview = this.createElement('div', {
+            const textPreview = createElement('div', {
                 className: 'quickllm-text-preview',
                 textContent: text.substring(0, 500) + (text.length > 500 ? '...' : '')
             });
@@ -246,12 +191,12 @@ class ContentManager {
             textGroup.appendChild(textPreview);
             
             // System prompt
-            const systemGroup = this.createElement('div', { className: 'quickllm-form-group' });
-            const systemLabel = this.createElement('label', {
+            const systemGroup = createElement('div', { className: 'quickllm-form-group' });
+            const systemLabel = createElement('label', {
                 className: 'quickllm-label',
                 textContent: 'System Prompt:'
             });
-            const systemInput = this.createElement('input', {
+            const systemInput = createElement('input', {
                 className: 'quickllm-input',
                 id: 'quickllm-system-prompt',
                 attributes: {
@@ -268,12 +213,12 @@ class ContentManager {
             systemGroup.appendChild(systemInput);
             
             // User prompt
-            const userGroup = this.createElement('div', { className: 'quickllm-form-group' });
-            const userLabel = this.createElement('label', {
+            const userGroup = createElement('div', { className: 'quickllm-form-group' });
+            const userLabel = createElement('label', {
                 className: 'quickllm-label',
                 textContent: 'User Prompt:'
             });
-            const userTextarea = this.createElement('textarea', {
+            const userTextarea = createElement('textarea', {
                 className: 'quickllm-input',
                 id: 'quickllm-user-prompt',
                 attributes: {
@@ -286,8 +231,8 @@ class ContentManager {
             userGroup.appendChild(userTextarea);
             
             // Info section
-            const infoGroup = this.createElement('div', { className: 'quickllm-form-group' });
-            const infoDiv = this.createElement('div', {
+            const infoGroup = createElement('div', { className: 'quickllm-form-group' });
+            const infoDiv = createElement('div', {
                 style: {
                     fontSize: '8px',
                     color: prefersDark ? '#aaa' : '#666',
@@ -295,10 +240,10 @@ class ContentManager {
                 }
             });
             
-            const profileInfo = this.createElement('strong', { textContent: 'Profile: ' });
+            const profileInfo = createElement('strong', { textContent: 'Profile: ' });
             const profileText = document.createTextNode(`${profile.name} (${profile.type})`);
             const br1 = document.createElement('br');
-            const shortcutsInfo = this.createElement('strong', { textContent: 'Keyboard shortcuts:' });
+            const shortcutsInfo = createElement('strong', { textContent: 'Keyboard shortcuts:' });
             const br2 = document.createElement('br');
             const shortcuts = document.createTextNode('• Enter: Process\n• Shift+Enter: New line in prompt\n• Enter again after response: Copy & Close\n• Escape: Close');
             
@@ -316,8 +261,8 @@ class ContentManager {
             leftSide.appendChild(infoGroup);
             
             // Right side
-            const rightSide = this.createElement('div', { className: 'quickllm-modal-right' });
-            const responseContainer = this.createElement('div', {
+            const rightSide = createElement('div', { className: 'quickllm-modal-right' });
+            const responseContainer = createElement('div', {
                 id: 'quickllm-response-container',
                 style: {
                     display: 'flex',
@@ -326,12 +271,12 @@ class ContentManager {
                     minHeight: '0'
                 }
             });
-            const responseLabel = this.createElement('label', {
+            const responseLabel = createElement('label', {
                 className: 'quickllm-label',
                 textContent: 'AI Response:',
                 style: { flexShrink: '0' }
             });
-            const responseDiv = this.createElement('div', {
+            const responseDiv = createElement('div', {
                 className: 'quickllm-response',
                 id: 'quickllm-response',
                 style: {
@@ -348,7 +293,7 @@ class ContentManager {
             body.appendChild(rightSide);
             
             // Footer
-            const footer = this.createElement('div', {
+            const footer = createElement('div', {
                 style: {
                     display: 'flex',
                     justifyContent: 'space-between',
@@ -359,16 +304,16 @@ class ContentManager {
                 }
             });
             
-            const leftFooter = this.createElement('div');
-            const processBtn = this.createElement('button', {
+            const leftFooter = createElement('div');
+            const processBtn = createElement('button', {
                 className: 'quickllm-btn',
                 id: 'quickllm-process',
                 textContent: 'Process'
             });
             leftFooter.appendChild(processBtn);
             
-            const rightFooter = this.createElement('div');
-            const copyBtn = this.createElement('button', {
+            const rightFooter = createElement('div');
+            const copyBtn = createElement('button', {
                 className: 'quickllm-btn',
                 id: 'quickllm-copy',
                 textContent: 'Copy',
@@ -484,7 +429,7 @@ class ContentManager {
         const prefersDark = await prefersDarkMode();
         
         const createModalContent = () => {
-            const modalContent = this.createElement('div', {
+            const modalContent = createElement('div', {
                 className: 'quickllm-modal-content',
                 style: {
                     maxWidth: '400px',
@@ -495,12 +440,12 @@ class ContentManager {
             });
             
             // Header
-            const header = this.createElement('div', { className: 'quickllm-modal-header' });
-            const title = this.createElement('h3', {
+            const header = createElement('div', { className: 'quickllm-modal-header' });
+            const title = createElement('h3', {
                 className: 'quickllm-modal-title',
                 textContent: 'Select Profile'
             });
-            const closeBtn = this.createElement('button', {
+            const closeBtn = createElement('button', {
                 className: 'quickllm-close-btn',
                 textContent: '×'
             });
@@ -508,13 +453,13 @@ class ContentManager {
             header.appendChild(closeBtn);
             
             // Profile list
-            const profileList = this.createElement('div', {
+            const profileList = createElement('div', {
                 className: 'quickllm-profile-list',
                 id: 'quickllm-profile-list'
             });
             
             profiles.forEach((profile, index) => {
-                const profileItem = this.createElement('div', {
+                const profileItem = createElement('div', {
                     className: `quickllm-profile-item ${index === 0 ? 'selected' : ''}`,
                     attributes: {
                         'data-profile-id': profile.id,
@@ -522,7 +467,7 @@ class ContentManager {
                     }
                 });
                 
-                const profileHeader = this.createElement('div', {
+                const profileHeader = createElement('div', {
                     style: {
                         display: 'flex',
                         alignItems: 'center',
@@ -531,7 +476,7 @@ class ContentManager {
                 });
                 
                 if (index < 10) {
-                    const numberSpan = this.createElement('span', {
+                    const numberSpan = createElement('span', {
                         textContent: index === 9 ? '0' : (index + 1).toString(),
                         style: {
                             display: 'inline-flex',
@@ -551,7 +496,7 @@ class ContentManager {
                     profileHeader.appendChild(numberSpan);
                 }
                 
-                const profileName = this.createElement('div', {
+                const profileName = createElement('div', {
                     textContent: profile.name,
                     style: {
                         fontWeight: '600',
@@ -563,7 +508,7 @@ class ContentManager {
                 });
                 profileHeader.appendChild(profileName);
                 
-                const profileDetails = this.createElement('div', {
+                const profileDetails = createElement('div', {
                     textContent: `${profile.type} - ${profile.model}`,
                     style: {
                         fontSize: '12px',
@@ -581,7 +526,7 @@ class ContentManager {
             });
             
             // Instructions
-            const instructions = this.createElement('div', {
+            const instructions = createElement('div', {
                 style: {
                     marginTop: '16px',
                     fontSize: '12px',
@@ -701,21 +646,10 @@ class ContentManager {
         const streamId = `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         this.currentStreamId = streamId;
         
-        // Show loading state - use DOM APIs for static content
-        while (responseElement.firstChild) {
-            responseElement.removeChild(responseElement.firstChild);
-        }
-        const loadingDiv = document.createElement('div');
-        loadingDiv.className = 'quickllm-loading';
-        
-        const spinnerDiv = document.createElement('div');
-        spinnerDiv.className = 'quickllm-spinner';
-        
-        const loadingText = document.createTextNode('Processing...');
-        
-        loadingDiv.appendChild(spinnerDiv);
-        loadingDiv.appendChild(loadingText);
-        responseElement.appendChild(loadingDiv);
+        // Show loading state using utility function
+        clearElement(responseElement);
+        const loadingElement = createLoadingElement('Processing...');
+        responseElement.appendChild(loadingElement);
         processBtn.disabled = true;
         userPromptInput.disabled = true;
 
@@ -733,8 +667,8 @@ class ContentManager {
             if (response.success) {
                 // Only process if this is still the current stream
                 if (this.currentStreamId === streamId) {
-                    // Render response as markdown using helper method
-                    this.renderMarkdownToElement(response.response, responseElement);
+                    // Render response as markdown using utility function
+                    renderMarkdownToElement(response.response, responseElement);
                     
                     // Show copy button now that we have a response
                     const copyBtn = this.currentModal.querySelector('#quickllm-copy');
@@ -755,14 +689,7 @@ class ContentManager {
         } catch (error) {
             // Only show error if this is still the current stream
             if (this.currentStreamId === streamId) {
-                // Use DOM APIs for error message
-                while (responseElement.firstChild) {
-                    responseElement.removeChild(responseElement.firstChild);
-                }
-                const errorDiv = document.createElement('div');
-                errorDiv.style.color = '#dc3545';
-                errorDiv.textContent = `Error: ${error.message}`;
-                responseElement.appendChild(errorDiv);
+                showErrorState(responseElement, `Error: ${error.message}`);
             }
         } finally {
             // Only re-enable controls if this is still the current stream
@@ -783,8 +710,8 @@ class ContentManager {
         if (this.currentModal && this.currentStreamId === streamId) {
             const responseElement = this.currentModal.querySelector('#quickllm-response');
             if (responseElement) {
-                // Render streaming content as markdown using helper method
-                this.renderMarkdownToElement(content, responseElement);
+                // Render streaming content as markdown using utility function
+                renderMarkdownToElement(content, responseElement);
             }
         }
     }
@@ -793,15 +720,15 @@ class ContentManager {
         const prefersDark = await prefersDarkMode();
         
         const createModalContent = () => {
-            const modalContent = this.createElement('div', { className: 'quickllm-modal-content' });
+            const modalContent = createElement('div', { className: 'quickllm-modal-content' });
             
             // Header
-            const header = this.createElement('div', { className: 'quickllm-modal-header' });
-            const title = this.createElement('h3', {
+            const header = createElement('div', { className: 'quickllm-modal-header' });
+            const title = createElement('h3', {
                 className: 'quickllm-modal-title',
                 textContent: 'AI Response'
             });
-            const closeBtn = this.createElement('button', {
+            const closeBtn = createElement('button', {
                 className: 'quickllm-close-btn',
                 textContent: '×'
             });
@@ -809,24 +736,24 @@ class ContentManager {
             header.appendChild(closeBtn);
             
             // Response content
-            const responseDiv = this.createElement('div', {
+            const responseDiv = createElement('div', {
                 className: 'quickllm-response markdown-content'
             });
-            // Use helper method to render markdown content
-            this.renderMarkdownToElement(content, responseDiv);
+            // Use utility function to render markdown content
+            renderMarkdownToElement(content, responseDiv);
             
             // Buttons
-            const buttonContainer = this.createElement('div', {
+            const buttonContainer = createElement('div', {
                 style: { marginTop: '16px' }
             });
             
-            const copyBtn = this.createElement('button', {
+            const copyBtn = createElement('button', {
                 className: 'quickllm-btn',
                 id: 'quickllm-copy-response',
                 textContent: 'Copy'
             });
             
-            const closeResponseBtn = this.createElement('button', {
+            const closeResponseBtn = createElement('button', {
                 className: 'quickllm-btn quickllm-btn-secondary',
                 id: 'quickllm-close-response',
                 textContent: 'Close'
@@ -861,15 +788,15 @@ class ContentManager {
         const prefersDark = await prefersDarkMode();
         
         const createModalContent = () => {
-            const modalContent = this.createElement('div', { className: 'quickllm-modal-content' });
+            const modalContent = createElement('div', { className: 'quickllm-modal-content' });
             
             // Header
-            const header = this.createElement('div', { className: 'quickllm-modal-header' });
-            const title = this.createElement('h3', {
+            const header = createElement('div', { className: 'quickllm-modal-header' });
+            const title = createElement('h3', {
                 className: 'quickllm-modal-title',
                 textContent: 'Error'
             });
-            const closeBtn = this.createElement('button', {
+            const closeBtn = createElement('button', {
                 className: 'quickllm-close-btn',
                 textContent: '×'
             });
@@ -877,7 +804,7 @@ class ContentManager {
             header.appendChild(closeBtn);
             
             // Error message
-            const errorDiv = this.createElement('div', {
+            const errorDiv = createElement('div', {
                 textContent: message,
                 style: {
                     color: '#dc3545',
@@ -886,11 +813,11 @@ class ContentManager {
             });
             
             // Close button
-            const buttonContainer = this.createElement('div', {
+            const buttonContainer = createElement('div', {
                 style: { marginTop: '16px' }
             });
             
-            const closeErrorBtn = this.createElement('button', {
+            const closeErrorBtn = createElement('button', {
                 className: 'quickllm-btn quickllm-btn-secondary',
                 id: 'quickllm-close-error',
                 textContent: 'Close'
@@ -941,7 +868,6 @@ class ContentManager {
             this.currentModal = null;
         }
     }
-
 }
 
 // Initialize content manager

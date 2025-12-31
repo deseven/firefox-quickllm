@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import * as bootstrap from 'bootstrap';
 import Sortable from 'sortablejs';
 import { PROMPT_TEMPLATES } from '../../utils/prompt-templates.js';
-import { applyTheme, loadProfiles, saveProfiles, escapeHtml, generateId } from '../../utils/utils.js';
+import { applyTheme, loadProfiles, saveProfiles, escapeHtml, generateId, clearElement, formatEndpointForDisplay } from '../../utils/utils.js';
 
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
@@ -72,10 +72,8 @@ class ProfileManager {
         loadingState.classList.add('d-none');
 
         if (this.profiles.length === 0) {
-            // Clear existing content using DOM APIs
-            while (profilesList.firstChild) {
-                profilesList.removeChild(profilesList.firstChild);
-            }
+            // Clear existing content using utility function
+            clearElement(profilesList);
             emptyState.classList.remove('d-none');
             addProfileSection.classList.add('d-none');
             return;
@@ -84,10 +82,8 @@ class ProfileManager {
         emptyState.classList.add('d-none');
         addProfileSection.classList.remove('d-none');
         
-        // Clear existing content using DOM APIs
-        while (profilesList.firstChild) {
-            profilesList.removeChild(profilesList.firstChild);
-        }
+        // Clear existing content using utility function
+        clearElement(profilesList);
         
         // Create profile items using DOM APIs
         this.profiles.forEach((profile, index) => {
@@ -132,7 +128,7 @@ class ProfileManager {
         const profileModel = document.createElement('div');
         profileModel.className = 'profile-model';
         const modelText = profile.endpoint ?
-            `${profile.model} (${this.formatEndpoint(profile.endpoint)})` :
+            `${profile.model} (${formatEndpointForDisplay(profile.endpoint)})` :
             profile.model;
         profileModel.textContent = modelText;
 
@@ -250,17 +246,6 @@ class ProfileManager {
     }
 
 
-    // Extract just the domain from endpoint for display
-    formatEndpoint(endpoint) {
-        if (!endpoint) return '';
-        try {
-            const url = new URL(endpoint);
-            return url.hostname;
-        } catch (e) {
-            // Fallback if URL parsing fails
-            return endpoint.replace(/^https?:\/\//, '').split('/')[0];
-        }
-    }
 
     // Get first available profile
     getDefaultProfile() {

@@ -1,7 +1,7 @@
 // Profile editing page functionality
 import './profile-edit.css';
 import { PROMPT_TEMPLATES } from '../../utils/prompt-templates.js';
-import { applyTheme, escapeHtml, generateId } from '../../utils/utils.js';
+import { applyTheme, escapeHtml, generateId, clearElement, getStorageData, setStorageData, sendRuntimeMessage } from '../../utils/utils.js';
 
 class ProfileEditor {
     constructor() {
@@ -55,10 +55,8 @@ class ProfileEditor {
     setupPromptTemplateDropdown() {
         const dropdown = document.getElementById('promptTemplateDropdown');
         
-        // Clear existing content using DOM APIs
-        while (dropdown.firstChild) {
-            dropdown.removeChild(dropdown.firstChild);
-        }
+        // Clear existing content using utility function
+        clearElement(dropdown);
         
         // Create template items using DOM APIs
         PROMPT_TEMPLATES.forEach(template => {
@@ -163,7 +161,7 @@ class ProfileEditor {
         this.showLoading(true);
         
         try {
-            const result = await browser.storage.local.get('profiles');
+            const result = await getStorageData('profiles');
             const profiles = result.profiles || [];
             const profile = profiles.find(p => p.id === profileId);
             
@@ -254,7 +252,7 @@ class ProfileEditor {
         this.showLoading(true);
 
         try {
-            const result = await browser.storage.local.get('profiles');
+            const result = await getStorageData('profiles');
             let profiles = result.profiles || [];
             
             if (this.profileId) {
@@ -269,10 +267,10 @@ class ProfileEditor {
                 profiles.push(profileData);
             }
 
-            await browser.storage.local.set({ profiles: profiles });
+            await setStorageData({ profiles: profiles });
             
             // Notify background script to update context menus
-            browser.runtime.sendMessage({ type: 'profilesUpdated' });
+            await sendRuntimeMessage({ type: 'profilesUpdated' });
             
             // Go back to main page
             this.goBack();
