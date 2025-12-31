@@ -3,6 +3,8 @@
   "name": "QuickLLM",
   "version": "1.0.0",
   "description": "Integrate LLMs (OpenAI/Anthropic) with your browser for enhanced text processing",
+  "author": "deseven",
+  "homepage_url": "https://github.com/deseven/firefox-quickllm",
   
   "permissions": [
     "activeTab",

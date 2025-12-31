@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node esbuild.config.js",
     "dev": "node esbuild.config.js --watch",
+    "pack": "npm run build && web-ext build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -30,6 +31,7 @@
     "querystring-es3": "^0.2.1",
     "stream-browserify": "^3.0.0",
     "url": "^0.11.4",
-    "util": "^0.12.5"
+    "util": "^0.12.5",
+    "web-ext": "^9.2.0"
   }
 }
