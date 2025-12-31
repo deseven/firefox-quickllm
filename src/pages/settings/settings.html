@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>QuickLLM Settings</title>
+    <link href='https://cdn.boxicons.com/3.0.6/fonts/basic/boxicons.min.css' rel='stylesheet'>
+    <link href='https://cdn.boxicons.com/3.0.6/fonts/brands/boxicons-brands.min.css' rel='stylesheet'>
+</head>
+<body>
+    <div class="container-fluid p-3">
+        <!-- Header -->
+        <div class="mb-4">
+            <h5 class="mb-0">
+                <i class='bx bx-cog'></i>
+                QuickLLM Settings
+            </h5>
+        </div>
+
+        <!-- Global Settings Section -->
+        <div class="settings-section">
+            <h6 class="section-title">
+                <i class='bx bx-cog'></i>
+                Global
+            </h6>
+            <div class="settings-content">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class='bx bx-palette'></i>
+                                    Theme
+                                </h6>
+                                <p class="card-text text-muted">
+                                    Choose your preferred theme appearance.
+                                </p>
+                                <div class="mb-3">
+                                    <select class="form-select" id="themeSelector">
+                                        <option value="auto">Auto (System)</option>
+                                        <option value="light">Light</option>
+                                        <option value="dark">Dark</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Import/Export Section -->
+        <div class="settings-section">
+            <h6 class="section-title">
+                <i class='bx bx-user-hexagon'></i>
+                Profile Management
+            </h6>
+            <div class="settings-content">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class='bx bx-export'></i>
+                                    Export Profiles
+                                </h6>
+                                <p class="card-text text-muted">
+                                    Download all your profiles as a JSON file for backup or sharing.
+                                </p>
+                                <button class="btn btn-primary" id="exportProfilesBtn">
+                                    <i class='bx bx-download'></i>
+                                    Export Profiles
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class='bx bx-import'></i>
+                                    Import Profiles
+                                </h6>
+                                <p class="card-text text-muted">
+                                    Import profiles from a JSON file. This will replace all current profiles.
+                                </p>
+                                <button class="btn btn-warning" id="importProfilesBtn">
+                                    <i class='bx bx-upload'></i>
+                                    Import Profiles
+                                </button>
+                                <input type="file" id="importFileInput" accept=".json" style="display: none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div class="settings-section">
+            <h6 class="section-title">
+                <i class='bx bx-info-circle'></i>
+                About
+            </h6>
+            <div class="settings-content">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class='bx bx-extension'></i>
+                                    Extension Information
+                                </h6>
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <strong>Name:</strong>
+                                    </div>
+                                    <div class="col-sm-9" id="extensionName">
+                                        QuickLLM
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-sm-3">
+                                        <strong>Version:</strong>
+                                    </div>
+                                    <div class="col-sm-9" id="extensionVersion">
+                                        1.0.0
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-sm-3">
+                                        <strong>Author:</strong>
+                                    </div>
+                                    <div class="col-sm-9">
+                                        deseven
+                                    </div>
+                                </div>
+                                <div class="row mt-2">
+                                    <div class="col-sm-3">
+                                        <strong>Website:</strong>
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <a href="https://d7.wtf" target="_blank" rel="noopener noreferrer">
+                                            https://d7.wtf
+                                            <i class='bx bx-link-external'></i>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-sm-3">
+                                        <strong>License:</strong>
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <textarea class="form-control" id="licenseText" rows="6" readonly style="font-family: monospace; font-size: 0.75rem; resize: none;">
+                                        </textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="statusMessage" class="alert d-none mt-3" role="alert">
+            <span id="statusText"></span>
+        </div>
+    </div>
+
+</body>
+</html>

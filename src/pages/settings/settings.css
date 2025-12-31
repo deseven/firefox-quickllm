@@ -1,0 +1,272 @@
+/* Settings page specific styles */
+body {
+    width: 500px;
+    min-height: 400px;
+    max-height: 800px;
+    overflow-y: auto;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Dark theme support */
+body.dark-theme {
+    background-color: #2d2d2d;
+    color: #ffffff;
+}
+
+body.dark-theme .card {
+    background-color: #3d3d3d;
+    border-color: #555;
+    color: #ffffff;
+}
+
+body.dark-theme .card-title {
+    color: #ffffff;
+}
+
+body.dark-theme .text-muted {
+    color: #ccc !important;
+}
+
+body.dark-theme .alert-success {
+    background-color: #0f3460;
+    color: #9eeaf9;
+    border-left-color: #0dcaf0;
+}
+
+body.dark-theme .alert-warning {
+    background-color: #664d03;
+    color: #ffecb5;
+    border-left-color: #ffc107;
+}
+
+body.dark-theme .alert-danger {
+    background-color: #58151c;
+    color: #f1aeb5;
+    border-left-color: #dc3545;
+}
+
+/* Settings sections */
+.settings-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-title i {
+    color: #6c757d;
+}
+
+.settings-content {
+    padding-left: 1rem;
+}
+
+/* Card styling */
+.card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.card:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+}
+
+.card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-title i {
+    color: #6c757d;
+}
+
+.card-text {
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+}
+
+/* Button styling */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.btn i {
+    font-size: 1rem;
+}
+
+/* Form controls styling */
+.form-select {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    appearance: none;
+}
+
+.form-select:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-select:disabled {
+    background-color: #e9ecef;
+    opacity: 1;
+}
+
+/* Dark theme form controls */
+body.dark-theme .form-select {
+    color: #fff;
+    background-color: #3d3d3d;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23adb5bd' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+    border-color: #555;
+}
+
+body.dark-theme .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+body.dark-theme .form-select:disabled {
+    background-color: #2d2d2d;
+}
+
+/* Status message styling */
+#statusMessage {
+    border-radius: 8px;
+    border: none;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: #d1edff;
+    color: #0c5460;
+    border-left: 4px solid #0dcaf0;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #664d03;
+    border-left: 4px solid #ffc107;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-left: 4px solid #dc3545;
+}
+
+/* Dark theme support */
+body.dark-theme {
+    background-color: #2d2d2d;
+    color: #ffffff;
+}
+
+body.dark-theme .section-title {
+    color: #ffffff;
+    border-bottom-color: #495057;
+}
+
+body.dark-theme .section-title i {
+    color: #adb5bd;
+}
+
+body.dark-theme .card {
+    background-color: #3d3d3d;
+    border-color: #555;
+    color: #ffffff;
+}
+
+body.dark-theme .card:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.25);
+}
+
+body.dark-theme .card-title {
+    color: #ffffff;
+}
+
+body.dark-theme .card-title i {
+    color: #adb5bd;
+}
+
+body.dark-theme .card-text {
+    color: #ccc;
+}
+
+body.dark-theme .btn-outline-secondary {
+    border-color: #adb5bd;
+    color: #adb5bd;
+}
+
+body.dark-theme .btn-outline-secondary:hover {
+    border-color: #dee2e6;
+    color: #dee2e6;
+    background-color: #495057;
+}
+
+/* Dark theme alert styling */
+body.dark-theme .alert-success {
+    background-color: #0f3460;
+    color: #9eeaf9;
+    border-left-color: #0dcaf0;
+}
+
+body.dark-theme .alert-warning {
+    background-color: #664d03;
+    color: #ffecb5;
+    border-left-color: #ffc107;
+}
+
+body.dark-theme .alert-danger {
+    background-color: #58151c;
+    color: #f1aeb5;
+    border-left-color: #dc3545;
+}
+
+/* Header styling */
+h5 i {
+    vertical-align: middle;
+    margin-right: 8px;
+    margin-top: -2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+    body {
+        width: 400px;
+    }
+    
+    .settings-content {
+        padding-left: 0.5rem;
+    }
+}

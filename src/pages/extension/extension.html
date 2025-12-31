@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>QuickLLM</title>
+    <link href='https://cdn.boxicons.com/3.0.6/fonts/basic/boxicons.min.css' rel='stylesheet'>
+    <link href='https://cdn.boxicons.com/3.0.6/fonts/brands/boxicons-brands.min.css' rel='stylesheet'>
+</head>
+<body>
+    <div class="container-fluid p-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">
+                <i class='bx bx-brain'></i>
+                QuickLLM Profiles
+            </h5>
+            <button class="btn btn-outline-secondary btn-sm" id="settingsBtn">
+                <i class='bx bx-cog'></i>
+            </button>
+        </div>
+
+        <!-- Profile List -->
+        <div id="profilesList" class="profiles-list">
+            <!-- Profiles will be dynamically inserted here -->
+        </div>
+
+        <!-- Add Profile Button (shown when profiles exist) -->
+        <div id="addProfileSection" class="text-center mt-3 d-none">
+            <button class="btn btn-primary btn-sm" id="addProfileBtn">
+                <i class='bx bx-plus'></i>
+                Add Profile
+            </button>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-4 d-none">
+            <i class='bx bx-brain' style="font-size: 3rem; color: #6c757d;"></i>
+            <p class="text-muted mt-2">No profiles defined</p>
+            <button class="btn btn-primary" id="addFirstProfileBtn">
+                <i class='bx bx-plus'></i>
+                Create Your First Profile
+            </button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mt-2">Loading profiles...</p>
+        </div>
+    </div>
+
+</body>
+</html>

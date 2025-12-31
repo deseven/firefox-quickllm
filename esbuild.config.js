@@ -1,0 +1,153 @@
+const esbuild = require('esbuild');
+const { polyfillNode } = require('esbuild-plugin-polyfill-node');
+const fs = require('fs');
+const path = require('path');
+
+// Read version from manifest.json and license
+const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+const version = manifest.version;
+const license = fs.readFileSync('LICENSE', 'utf8');
+
+// Plugin to handle CSS files that need to be converted to strings
+const cssToStringPlugin = {
+  name: 'css-to-string',
+  setup(build) {
+    build.onLoad({ filter: /styles\/(content|shadow-modal)\.css$/ }, async (args) => {
+      const css = await fs.promises.readFile(args.path, 'utf8');
+      return {
+        contents: `export default ${JSON.stringify(css)};`,
+        loader: 'js',
+      };
+    });
+  },
+};
+
+// Plugin to copy HTML files and inject scripts
+const htmlPlugin = {
+  name: 'html-plugin',
+  setup(build) {
+    build.onEnd(async () => {
+      const htmlFiles = [
+        { template: 'src/pages/extension/extension.html', output: 'extension.html', chunk: 'extension' },
+        { template: 'src/pages/process/process.html', output: 'process.html', chunk: 'process' },
+        { template: 'src/pages/profile-edit/profile-edit.html', output: 'profile-edit.html', chunk: 'profile-edit' },
+        { template: 'src/pages/settings/settings.html', output: 'settings.html', chunk: 'settings' },
+      ];
+
+      for (const htmlFile of htmlFiles) {
+        let html = await fs.promises.readFile(htmlFile.template, 'utf8');
+        
+        // Inject the script tag before closing body tag
+        const scriptTag = `<script src="${htmlFile.chunk}.js"></script>`;
+        const cssTag = `<link rel="stylesheet" href="${htmlFile.chunk}.css">`;
+        
+        if (html.includes('</body>')) {
+          html = html.replace('</body>', `${scriptTag}\n</body>`);
+        } else {
+          html += `\n${scriptTag}`;
+        }
+        
+        if (html.includes('</head>')) {
+          html = html.replace('</head>', `${cssTag}\n</head>`);
+        } else if (html.includes('<head>')) {
+          html = html.replace('<head>', `<head>\n${cssTag}`);
+        } else {
+          html = `${cssTag}\n${html}`;
+        }
+        
+        await fs.promises.writeFile(path.join('dist', htmlFile.output), html);
+      }
+    });
+  },
+};
+
+const buildOptions = {
+  entryPoints: {
+    background: './src/core/background.js',
+    extension: './src/pages/extension/extension.js',
+    process: './src/pages/process/process.js',
+    injector: './src/core/injector.js',
+    'profile-edit': './src/pages/profile-edit/profile-edit.js',
+    settings: './src/pages/settings/settings.js'
+  },
+  bundle: true,
+  outdir: 'dist',
+  format: 'iife',
+  target: 'es2020',
+  platform: 'browser',
+  minify: true,
+  sourcemap: false,
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    'process.env.EXTENSION_VERSION': JSON.stringify(version),
+    'process.env.EXTENSION_LICENSE': JSON.stringify(license),
+  },
+  plugins: [
+    polyfillNode({
+      polyfills: {
+        buffer: true,
+        stream: true,
+        util: true,
+        url: true,
+        querystring: true,
+        path: true,
+        crypto: true,
+        fs: false,
+        net: false,
+        tls: false,
+      },
+    }),
+    cssToStringPlugin,
+    htmlPlugin,
+  ],
+  loader: {
+    '.css': 'css',
+    '.html': 'text',
+  },
+  external: [],
+};
+
+async function build() {
+  try {
+    // Clean dist directory
+    if (fs.existsSync('dist')) {
+      fs.rmSync('dist', { recursive: true, force: true });
+    }
+    fs.mkdirSync('dist', { recursive: true });
+
+    await esbuild.build(buildOptions);
+    console.log('Build completed successfully!');
+  } catch (error) {
+    console.error('Build failed:', error);
+    process.exit(1);
+  }
+}
+
+async function watch() {
+  try {
+    // Clean dist directory
+    if (fs.existsSync('dist')) {
+      fs.rmSync('dist', { recursive: true, force: true });
+    }
+    fs.mkdirSync('dist', { recursive: true });
+
+    const ctx = await esbuild.context(buildOptions);
+    await ctx.watch();
+    console.log('Watching for changes...');
+  } catch (error) {
+    console.error('Watch failed:', error);
+    process.exit(1);
+  }
+}
+
+// Check if this is being run directly
+if (require.main === module) {
+  const isWatch = process.argv.includes('--watch');
+  if (isWatch) {
+    watch();
+  } else {
+    build();
+  }
+}
+
+module.exports = { build, watch, buildOptions };

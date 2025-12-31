@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>AI Processing - QuickLLM</title>
+    <style>
+        /* Markdown content styles for process modal */
+        .markdown-content {
+            white-space: normal;
+        }
+
+        .markdown-content * {
+            all: unset;
+            display: revert;
+            box-sizing: border-box;
+        }
+
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+            font-weight: 600;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            line-height: 1.3;
+            color: inherit;
+        }
+
+        .markdown-content h1 { font-size: 1.8em; }
+        .markdown-content h2 { font-size: 1.5em; }
+        .markdown-content h3 { font-size: 1.3em; }
+        .markdown-content h4 { font-size: 1.1em; }
+        .markdown-content h5 { font-size: 1em; }
+        .markdown-content h6 { font-size: 0.9em; }
+
+        .markdown-content h1:first-child,
+        .markdown-content h2:first-child,
+        .markdown-content h3:first-child,
+        .markdown-content h4:first-child,
+        .markdown-content h5:first-child,
+        .markdown-content h6:first-child {
+            margin-top: 0;
+        }
+
+        .markdown-content p {
+            margin-bottom: 1em;
+            line-height: 1.6;
+        }
+
+        .markdown-content strong {
+            font-weight: 600;
+        }
+
+        .markdown-content em {
+            font-style: italic;
+        }
+
+        .markdown-content ul,
+        .markdown-content ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+
+        .markdown-content li {
+            margin-bottom: 0.5em;
+        }
+
+        .markdown-content blockquote {
+            margin: 1em 0;
+            padding: 0.5em 1em;
+            border-left: 4px solid #007bff;
+            background: rgba(0, 123, 255, 0.05);
+            font-style: italic;
+        }
+
+        .markdown-content code.inline-code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-content pre {
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 1em;
+            margin: 1em 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+            border-radius: 0;
+            font-size: inherit;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            margin: 1em 0;
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .markdown-content th,
+        .markdown-content td {
+            border: 1px solid #ddd;
+            padding: 0.5em 1em;
+            text-align: left;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .markdown-content th {
+            background: #f6f8fa;
+            font-weight: 600;
+        }
+
+        .markdown-content a {
+            color: #007bff;
+            text-decoration: underline;
+        }
+
+        .markdown-content a:hover {
+            color: #0056b3;
+        }
+
+        .markdown-content hr {
+            border: none;
+            border-top: 1px solid #e1e4e8;
+            margin: 2em 0;
+        }
+
+        /* Syntax highlighting styles */
+        .markdown-content .hljs {
+            background: #f6f8fa !important;
+            color: #24292e !important;
+        }
+
+        .markdown-content .hljs-comment,
+        .markdown-content .hljs-quote {
+            color: #6a737d !important;
+            font-style: italic;
+        }
+
+        .markdown-content .hljs-keyword,
+        .markdown-content .hljs-selector-tag,
+        .markdown-content .hljs-subst {
+            color: #d73a49 !important;
+        }
+
+        .markdown-content .hljs-number,
+        .markdown-content .hljs-literal,
+        .markdown-content .hljs-variable,
+        .markdown-content .hljs-template-variable,
+        .markdown-content .hljs-tag .hljs-attr {
+            color: #005cc5 !important;
+        }
+
+        .markdown-content .hljs-string,
+        .markdown-content .hljs-doctag {
+            color: #032f62 !important;
+        }
+
+        .markdown-content .hljs-title,
+        .markdown-content .hljs-section,
+        .markdown-content .hljs-selector-id {
+            color: #6f42c1 !important;
+            font-weight: bold;
+        }
+
+        .markdown-content .hljs-type,
+        .markdown-content .hljs-class .hljs-title {
+            color: #d73a49 !important;
+        }
+
+        .markdown-content .hljs-tag,
+        .markdown-content .hljs-name,
+        .markdown-content .hljs-attribute {
+            color: #22863a !important;
+        }
+
+        .markdown-content .hljs-regexp,
+        .markdown-content .hljs-link {
+            color: #032f62 !important;
+        }
+
+        .markdown-content .hljs-symbol,
+        .markdown-content .hljs-bullet {
+            color: #e36209 !important;
+        }
+
+        .markdown-content .hljs-built_in,
+        .markdown-content .hljs-builtin-name {
+            color: #005cc5 !important;
+        }
+
+        .markdown-content .hljs-meta {
+            color: #6a737d !important;
+        }
+
+        .markdown-content .hljs-deletion {
+            background: #ffeef0 !important;
+        }
+
+        .markdown-content .hljs-addition {
+            background: #f0fff4 !important;
+        }
+
+        .markdown-content .hljs-emphasis {
+            font-style: italic;
+        }
+
+        .markdown-content .hljs-strong {
+            font-weight: bold;
+        }
+
+        /* Dark theme styles */
+        @media (prefers-color-scheme: dark) {
+            .markdown-content blockquote {
+                border-left-color: #58a6ff;
+                background: rgba(88, 166, 255, 0.1);
+            }
+
+            .markdown-content code.inline-code {
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            .markdown-content pre {
+                background: #161b22;
+                border-color: #30363d;
+            }
+
+            .markdown-content th {
+                background: #21262d;
+            }
+
+            .markdown-content th,
+            .markdown-content td {
+                border-color: #30363d;
+            }
+
+
+            .markdown-content a {
+                color: #58a6ff;
+            }
+
+            .markdown-content a:hover {
+                color: #79c0ff;
+            }
+
+            .markdown-content hr {
+                border-top-color: #30363d;
+            }
+
+            /* Dark theme syntax highlighting */
+            .markdown-content .hljs {
+                background: #161b22 !important;
+                color: #e6edf3 !important;
+            }
+
+            .markdown-content .hljs-comment,
+            .markdown-content .hljs-quote {
+                color: #8b949e !important;
+            }
+
+            .markdown-content .hljs-keyword,
+            .markdown-content .hljs-selector-tag,
+            .markdown-content .hljs-subst {
+                color: #ff7b72 !important;
+            }
+
+            .markdown-content .hljs-number,
+            .markdown-content .hljs-literal,
+            .markdown-content .hljs-variable,
+            .markdown-content .hljs-template-variable,
+            .markdown-content .hljs-tag .hljs-attr {
+                color: #79c0ff !important;
+            }
+
+            .markdown-content .hljs-string,
+            .markdown-content .hljs-doctag {
+                color: #a5d6ff !important;
+            }
+
+            .markdown-content .hljs-title,
+            .markdown-content .hljs-section,
+            .markdown-content .hljs-selector-id {
+                color: #d2a8ff !important;
+            }
+
+            .markdown-content .hljs-type,
+            .markdown-content .hljs-class .hljs-title {
+                color: #ff7b72 !important;
+            }
+
+            .markdown-content .hljs-tag,
+            .markdown-content .hljs-name,
+            .markdown-content .hljs-attribute {
+                color: #7ee787 !important;
+            }
+
+            .markdown-content .hljs-regexp,
+            .markdown-content .hljs-link {
+                color: #a5d6ff !important;
+            }
+
+            .markdown-content .hljs-symbol,
+            .markdown-content .hljs-bullet {
+                color: #ffa657 !important;
+            }
+
+            .markdown-content .hljs-built_in,
+            .markdown-content .hljs-builtin-name {
+                color: #79c0ff !important;
+            }
+
+            .markdown-content .hljs-meta {
+                color: #8b949e !important;
+            }
+
+            .markdown-content .hljs-deletion {
+                background: #490202 !important;
+            }
+
+            .markdown-content .hljs-addition {
+                background: #033a16 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- LLM Response Modal -->
+    <div class="modal fade" id="responseModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        AI Response
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="responseContent">
+                        <div class="text-center py-4">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Processing...</span>
+                            </div>
+                            <p class="text-muted mt-2">Thinking...</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="copyResponseBtn">
+                        Copy Response
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

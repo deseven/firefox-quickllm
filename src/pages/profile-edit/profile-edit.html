@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Edit Profile - QuickLLM</title>
+    <link href='https://cdn.boxicons.com/3.0.6/fonts/basic/boxicons.min.css' rel='stylesheet'>
+    <link href='https://cdn.boxicons.com/3.0.6/fonts/brands/boxicons-brands.min.css' rel='stylesheet'>
+</head>
+<body>
+    <div class="container">
+        <!-- Profile Form -->
+        <form id="profileForm" class="profile-form">
+            <input type="hidden" id="profileId" name="profileId">
+            
+            <!-- Mode Switch -->
+            <div class="mode-switch-section">
+                <div class="mode-switch-container">
+                    <span class="mode-label">Basic</span>
+                    <label class="mode-switch">
+                        <input type="checkbox" id="advancedModeToggle">
+                        <span class="mode-slider"></span>
+                    </label>
+                    <span class="mode-label">Advanced</span>
+                </div>
+            </div>
+            
+            <!-- API Configuration -->
+            <div class="form-section">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="profileName" class="form-label">Name *</label>
+                        <input type="text" class="form-control" id="profileName" name="profileName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="profileType" class="form-label">Type *</label>
+                        <select class="form-select" id="profileType" name="profileType" required>
+                            <option value="">Select...</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="ollama">Ollama</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group advanced-field">
+                    <label for="apiEndpoint" class="form-label">Custom Endpoint</label>
+                    <input type="url" class="form-control" id="apiEndpoint" name="apiEndpoint"
+                           placeholder="Leave empty for default">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="apiKey" class="form-label">API Key *</label>
+                        <input type="password" class="form-control" id="apiKey" name="apiKey" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modelName" class="form-label">Model *</label>
+                        <input type="text" class="form-control" id="modelName" name="modelName" required
+                               placeholder="e.g. gpt-4, claude-3-haiku">
+                    </div>
+                </div>
+
+                <div class="form-group advanced-field">
+                    <label for="extraOptions" class="form-label">Extra Options</label>
+                    <textarea class="form-control" id="extraOptions" name="extraOptions" rows="3"
+                              placeholder='Define custom options to be sent to the API in JSON format, for example {"temperature":0.1}'></textarea>
+                </div>
+            </div>
+
+            <!-- Prompts and Options -->
+            <div class="form-section">
+                <div class="form-group">
+                    <div class="prompt-label-group">
+                        <label for="systemPrompt" class="form-label">System Prompt *</label>
+                        <button class="template-btn-small" type="button" id="promptTemplateBtn" title="Select template">
+                            <i class='bx bx-sparkle'></i>
+                        </button>
+                    </div>
+                    <textarea class="form-control" id="systemPrompt" name="systemPrompt" rows="4" required
+                              placeholder="System prompt to guide AI behavior"></textarea>
+                    <!-- Template dropdown -->
+                    <div class="template-dropdown" id="promptTemplateDropdown">
+                        <!-- Templates will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="form-group advanced-field">
+                    <label for="userPrompt" class="form-label">User Prompt</label>
+                    <textarea class="form-control" id="userPrompt" name="userPrompt" rows="3"
+                              placeholder="Optional user prompt to be sent before the content"></textarea>
+                </div>
+            </div>
+
+            <!-- Processing Options -->
+            <div class="form-section">
+                <div class="options-grid">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="processImmediately" name="processImmediately">
+                        <label class="form-check-label" for="processImmediately">
+                            Process immediately
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="saveProfileBtn">
+                    <i class='bx bx-save'></i>
+                    Save Profile
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="loading-overlay d-none">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>Loading profile...</p>
+        </div>
+    </div>
+
+</body>
+</html>

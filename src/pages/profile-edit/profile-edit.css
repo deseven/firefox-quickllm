@@ -1,0 +1,517 @@
+/* Profile Edit Page Styles */
+body {
+    max-width: 100%;
+    min-height: 600px;
+    max-height: 1000px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f8f9fa;
+    box-sizing: border-box;
+}
+
+* {
+    box-sizing: border-box;
+    max-width: 100%;
+}
+
+/* Dark theme support */
+body.dark-theme {
+    background-color: #2d2d2d;
+    color: #ffffff;
+}
+
+.container {
+    padding: 8px;
+    max-width: 100%;
+}
+
+/* Form Sections */
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Mode Switch Section */
+.mode-switch-section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 0;
+}
+
+body.dark-theme .mode-switch-section {
+    background: #3d3d3d;
+    border-color: #555;
+}
+
+.mode-switch-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.mode-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #495057;
+    transition: color 0.2s ease;
+}
+
+body.dark-theme .mode-label {
+    color: #ccc;
+}
+
+.mode-label.active {
+    color: #0d6efd;
+}
+
+body.dark-theme .mode-label.active {
+    color: #4dabf7;
+}
+
+/* Toggle Switch */
+.mode-switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.mode-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.mode-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.3s;
+    border-radius: 24px;
+}
+
+.mode-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.3s;
+    border-radius: 50%;
+}
+
+input:checked + .mode-slider {
+    background-color: #0d6efd;
+}
+
+input:checked + .mode-slider:before {
+    transform: translateX(26px);
+}
+
+body.dark-theme .mode-slider {
+    background-color: #555;
+}
+
+body.dark-theme input:checked + .mode-slider {
+    background-color: #4dabf7;
+}
+
+/* Advanced Fields Visibility */
+.advanced-field {
+    transition: opacity 0.3s ease, max-height 0.3s ease;
+    overflow: hidden;
+}
+
+.basic-mode .advanced-field {
+    display: none;
+}
+
+.form-section {
+    background: #fff;
+    border-radius: 8px;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+}
+
+body.dark-theme .form-section {
+    background: #3d3d3d;
+    border-color: #555;
+}
+
+/* Form Layout */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.form-row:last-child {
+    margin-bottom: 0;
+}
+
+.form-row .form-group {
+    margin-bottom: 0;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* Ensure consistent spacing for all form elements */
+.form-section > .form-group,
+.form-section > .form-row,
+.form-section > .options-grid {
+    margin-bottom: 8px;
+}
+
+.form-section > .form-group:last-child,
+.form-section > .form-row:last-child,
+.form-section > .options-grid:last-child {
+    margin-bottom: 0;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 4px;
+}
+
+body.dark-theme .form-label {
+    color: #ccc;
+}
+
+.form-control,
+.form-select {
+    padding: 6px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    background: #fff;
+    color: #495057;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.form-control:focus,
+.form-select:focus {
+    outline: none;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}
+
+body.dark-theme .form-control,
+body.dark-theme .form-select {
+    background-color: #555;
+    border-color: #666;
+    color: #ffffff;
+}
+
+body.dark-theme .form-control:focus,
+body.dark-theme .form-select:focus {
+    background-color: #555;
+    border-color: #0d6efd;
+    color: #ffffff;
+}
+
+/* Prompt Label Group */
+.prompt-label-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.template-btn-small {
+    background: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 4px 6px;
+    cursor: pointer;
+    color: #6c757d;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    min-width: 24px;
+    height: 24px;
+}
+
+.template-btn-small:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.template-btn-small:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+body.dark-theme .template-btn-small {
+    background: #555;
+    border-color: #666;
+    color: #ccc;
+}
+
+body.dark-theme .template-btn-small:hover {
+    background: #666;
+    color: #fff;
+}
+
+/* Template Dropdown */
+.template-dropdown {
+    position: absolute;
+    top: 28px;
+    right: 0;
+    z-index: 1000;
+    min-width: 200px;
+    max-width: 300px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: none;
+    margin-top: 4px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.template-dropdown.show {
+    display: block;
+}
+
+body.dark-theme .template-dropdown {
+    background: #3d3d3d;
+    border-color: #555;
+}
+
+.template-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+    transition: background-color 0.15s ease;
+    font-size: 0.875rem;
+    color: #495057;
+}
+
+.template-item:hover {
+    background-color: #f8f9fa;
+}
+
+.template-item:last-child {
+    border-bottom: none;
+}
+
+body.dark-theme .template-item {
+    border-bottom-color: #555;
+    color: #fff;
+}
+
+body.dark-theme .template-item:hover {
+    background-color: #555;
+}
+
+/* Options Grid */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-check-input {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.form-check-label {
+    font-size: 0.875rem;
+    color: #495057;
+    cursor: pointer;
+    margin: 0;
+}
+
+body.dark-theme .form-check-label {
+    color: #ccc;
+}
+
+/* Action Buttons */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 4px;
+    margin-top: 8px;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background-color: #5c636a;
+    border-color: #565e64;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    background: #fff;
+    padding: 24px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-theme .loading-content {
+    background: #3d3d3d;
+    color: #fff;
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #0d6efd;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Utility Classes */
+.d-none {
+    display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    body {
+        width: 350px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .options-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .form-actions {
+        flex-direction: row;
+        gap: 8px;
+    }
+    
+    .btn {
+        flex: 1;
+        justify-content: center;
+    }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+body.dark-theme ::-webkit-scrollbar-track {
+    background: #555;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb {
+    background: #777;
+}
+
+body.dark-theme ::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}

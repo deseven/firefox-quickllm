@@ -1,0 +1,35 @@
+{
+  "name": "quickllm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "popup.js",
+  "scripts": {
+    "build": "node esbuild.config.js",
+    "dev": "node esbuild.config.js --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
+    "bootstrap": "^5.3.8",
+    "highlight.js": "^11.11.1",
+    "marked": "^17.0.1",
+    "ollama": "^0.6.3",
+    "openai": "^6.15.0",
+    "sortablejs": "^1.15.6",
+    "turndown": "^7.2.2"
+  },
+  "devDependencies": {
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
+    "esbuild": "^0.27.2",
+    "esbuild-plugin-polyfill-node": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "querystring-es3": "^0.2.1",
+    "stream-browserify": "^3.0.0",
+    "url": "^0.11.4",
+    "util": "^0.12.5"
+  }
+}
