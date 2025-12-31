@@ -55,19 +55,25 @@ class ProfileEditor {
     setupPromptTemplateDropdown() {
         const dropdown = document.getElementById('promptTemplateDropdown');
         
-        // Populate dropdown with templates
-        dropdown.innerHTML = PROMPT_TEMPLATES.map(template => `
-            <div class="template-item" data-template-name="${template.name}">
-                ${escapeHtml(template.name)}
-            </div>
-        `).join('');
-
-        // Add click listeners to template items
-        dropdown.querySelectorAll('.template-item').forEach(item => {
-            item.addEventListener('click', (e) => {
+        // Clear existing content using DOM APIs
+        while (dropdown.firstChild) {
+            dropdown.removeChild(dropdown.firstChild);
+        }
+        
+        // Create template items using DOM APIs
+        PROMPT_TEMPLATES.forEach(template => {
+            const templateItem = document.createElement('div');
+            templateItem.className = 'template-item';
+            templateItem.setAttribute('data-template-name', template.name);
+            templateItem.textContent = template.name;
+            
+            // Add click listener
+            templateItem.addEventListener('click', (e) => {
                 const templateName = e.currentTarget.getAttribute('data-template-name');
                 this.selectPromptTemplate(templateName);
             });
+            
+            dropdown.appendChild(templateItem);
         });
     }
 

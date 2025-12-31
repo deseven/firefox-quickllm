@@ -11,13 +11,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const content = responseContent.textContent || responseContent.innerText;
             navigator.clipboard.writeText(content).then(() => {
                 // Visual feedback for successful copy
-                const originalText = copyResponseBtn.innerHTML;
-                copyResponseBtn.innerHTML = 'Copied!';
+                const originalText = copyResponseBtn.textContent;
+                copyResponseBtn.textContent = 'Copied!';
                 copyResponseBtn.classList.add('btn-success');
                 copyResponseBtn.classList.remove('btn-primary');
                 
                 setTimeout(() => {
-                    copyResponseBtn.innerHTML = originalText;
+                    copyResponseBtn.textContent = originalText;
                     copyResponseBtn.classList.remove('btn-success');
                     copyResponseBtn.classList.add('btn-primary');
                 }, 2000);
@@ -32,9 +32,22 @@ document.addEventListener('DOMContentLoaded', function() {
 function updateResponseContent(content) {
     const responseContent = document.getElementById('responseContent');
     if (responseContent) {
+        // Clear existing content
+        while (responseContent.firstChild) {
+            responseContent.removeChild(responseContent.firstChild);
+        }
+        
         // Always render content as markdown
         const renderedContent = markdownRenderer.render(content);
-        responseContent.innerHTML = renderedContent;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(renderedContent, 'text/html');
+        
+        // Move all children from parsed document to target element
+        const bodyChildren = Array.from(doc.body.childNodes);
+        bodyChildren.forEach(child => {
+            responseContent.appendChild(child);
+        });
+        
         responseContent.classList.add('markdown-content');
     }
 }
@@ -43,14 +56,31 @@ function updateResponseContent(content) {
 function showLoadingState() {
     const responseContent = document.getElementById('responseContent');
     if (responseContent) {
-        responseContent.innerHTML = `
-            <div class="text-center py-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Processing...</span>
-                </div>
-                <p class="text-muted mt-2">Thinking...</p>
-            </div>
-        `;
+        // Clear existing content using DOM APIs
+        while (responseContent.firstChild) {
+            responseContent.removeChild(responseContent.firstChild);
+        }
+        
+        // Create loading state using DOM APIs
+        const containerDiv = document.createElement('div');
+        containerDiv.className = 'text-center py-4';
+        
+        const spinnerDiv = document.createElement('div');
+        spinnerDiv.className = 'spinner-border text-primary';
+        spinnerDiv.setAttribute('role', 'status');
+        
+        const hiddenSpan = document.createElement('span');
+        hiddenSpan.className = 'visually-hidden';
+        hiddenSpan.textContent = 'Processing...';
+        
+        const thinkingP = document.createElement('p');
+        thinkingP.className = 'text-muted mt-2';
+        thinkingP.textContent = 'Thinking...';
+        
+        spinnerDiv.appendChild(hiddenSpan);
+        containerDiv.appendChild(spinnerDiv);
+        containerDiv.appendChild(thinkingP);
+        responseContent.appendChild(containerDiv);
     }
 }
 

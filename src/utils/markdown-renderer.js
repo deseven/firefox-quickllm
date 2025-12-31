@@ -91,10 +91,10 @@ class MarkdownRenderer {
         const codeBlockRegex = /<pre[^>]*><code[^>]*class="[^"]*language-([^"\s]+)[^"]*"[^>]*>([\s\S]*?)<\/code><\/pre>/g;
         
         return html.replace(codeBlockRegex, (match, lang, code) => {
-            // Decode HTML entities in the code using a comprehensive approach
-            const textarea = document.createElement('textarea');
-            textarea.innerHTML = code;
-            const decodedCode = textarea.value;
+            // Decode HTML entities in the code using DOM parser for safety
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(`<div>${code}</div>`, 'text/html');
+            const decodedCode = doc.body.textContent || doc.body.innerText || '';
             
             if (lang && hljs.getLanguage(lang)) {
                 try {
@@ -134,9 +134,12 @@ class MarkdownRenderer {
      * @returns {string} - Escaped text
      */
     escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
 }

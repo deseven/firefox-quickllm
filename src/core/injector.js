@@ -12,6 +12,59 @@ class ContentManager {
         this.init();
     }
 
+    // Helper function to create DOM elements programmatically
+    createElement(tag, options = {}) {
+        const element = document.createElement(tag);
+        
+        if (options.className) element.className = options.className;
+        if (options.id) element.id = options.id;
+        if (options.textContent) element.textContent = options.textContent;
+        if (options.style) {
+            if (typeof options.style === 'string') {
+                element.style.cssText = options.style;
+            } else {
+                Object.assign(element.style, options.style);
+            }
+        }
+        if (options.attributes) {
+            Object.entries(options.attributes).forEach(([key, value]) => {
+                element.setAttribute(key, value);
+            });
+        }
+        if (options.children) {
+            options.children.forEach(child => {
+                if (typeof child === 'string') {
+                    element.appendChild(document.createTextNode(child));
+                } else {
+                    element.appendChild(child);
+                }
+            });
+        }
+        
+        return element;
+    }
+
+    // Helper to safely render markdown content to DOM
+    renderMarkdownToElement(content, targetElement) {
+        // Clear existing content
+        while (targetElement.firstChild) {
+            targetElement.removeChild(targetElement.firstChild);
+        }
+        
+        // Render markdown and create a temporary container
+        const renderedContent = markdownRenderer.render(content);
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(renderedContent, 'text/html');
+        
+        // Move all children from parsed document to target element
+        const bodyChildren = Array.from(doc.body.childNodes);
+        bodyChildren.forEach(child => {
+            targetElement.appendChild(child);
+        });
+        
+        targetElement.classList.add('markdown-content');
+    }
+
     init() {
         this.setupMessageHandlers();
     }
@@ -157,64 +210,185 @@ class ContentManager {
         // User prompt is always editable now
         const shouldProcessImmediately = profile.processImmediately && !bypassProcessImmediately;
         
-        const modalContent = `
-            <div class="quickllm-modal-content">
-                <div class="quickllm-modal-header">
-                    <h3 class="quickllm-modal-title">Process ${textType}</h3>
-                    <button class="quickllm-close-btn">&times;</button>
-                </div>
-                
-                <div class="quickllm-modal-body">
-                    <div class="quickllm-modal-left">
-                        <div class="quickllm-form-group">
-                            <label class="quickllm-label">Text to process:</label>
-                            <div class="quickllm-text-preview">${escapeHtml(text.substring(0, 500))}${text.length > 500 ? '...' : ''}</div>
-                        </div>
-                        
-                        <div class="quickllm-form-group">
-                            <label class="quickllm-label">System Prompt:</label>
-                            <input type="text" class="quickllm-input" id="quickllm-system-prompt" readonly value="${profile.systemPrompt || 'No system prompt configured'}" style="background-color: ${prefersDark ? '#2a2a2a' : '#f5f5f5'}; cursor: default;">
-                        </div>
-                        
-                        <div class="quickllm-form-group">
-                            <label class="quickllm-label">User Prompt:</label>
-                            <textarea class="quickllm-input" id="quickllm-user-prompt" placeholder="Enter your user prompt (Shift+Enter for new line)" rows="3">${profile.userPrompt || ''}</textarea>
-                        </div>
-                        
-                        <div class="quickllm-form-group">
-                            <div style="font-size: 8px; color: ${prefersDark ? '#aaa' : '#666'}; margin-top: 8px;">
-                                <strong>Profile:</strong> ${escapeHtml(profile.name)} (${profile.type})<br>
-                                <strong>Keyboard shortcuts:</strong><br>
-                                • Enter: Process<br>
-                                • Shift+Enter: New line in prompt<br>
-                                • Enter again after response: Copy & Close<br>
-                                • Escape: Close
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="quickllm-modal-right">
-                        <div id="quickllm-response-container" style="display: flex; flex: 1; flex-direction: column; min-height: 0;">
-                            <label class="quickllm-label" style="flex-shrink: 0;">AI Response:</label>
-                            <div class="quickllm-response" id="quickllm-response" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid ${prefersDark ? '#444' : '#e5e5e5'};">
-                    <div>
-                        <button class="quickllm-btn" id="quickllm-process">Process</button>
-                    </div>
-                    <div>
-                        <button class="quickllm-btn" id="quickllm-copy" style="display: none;">Copy</button>
-                    </div>
-                </div>
-            </div>
-        `;
+        const createModalContent = () => {
+            const modalContent = this.createElement('div', { className: 'quickllm-modal-content' });
+            
+            // Header
+            const header = this.createElement('div', { className: 'quickllm-modal-header' });
+            const title = this.createElement('h3', {
+                className: 'quickllm-modal-title',
+                textContent: `Process ${textType}`
+            });
+            const closeBtn = this.createElement('button', {
+                className: 'quickllm-close-btn',
+                textContent: '×'
+            });
+            header.appendChild(title);
+            header.appendChild(closeBtn);
+            
+            // Body
+            const body = this.createElement('div', { className: 'quickllm-modal-body' });
+            
+            // Left side
+            const leftSide = this.createElement('div', { className: 'quickllm-modal-left' });
+            
+            // Text to process
+            const textGroup = this.createElement('div', { className: 'quickllm-form-group' });
+            const textLabel = this.createElement('label', {
+                className: 'quickllm-label',
+                textContent: 'Text to process:'
+            });
+            const textPreview = this.createElement('div', {
+                className: 'quickllm-text-preview',
+                textContent: text.substring(0, 500) + (text.length > 500 ? '...' : '')
+            });
+            textGroup.appendChild(textLabel);
+            textGroup.appendChild(textPreview);
+            
+            // System prompt
+            const systemGroup = this.createElement('div', { className: 'quickllm-form-group' });
+            const systemLabel = this.createElement('label', {
+                className: 'quickllm-label',
+                textContent: 'System Prompt:'
+            });
+            const systemInput = this.createElement('input', {
+                className: 'quickllm-input',
+                id: 'quickllm-system-prompt',
+                attributes: {
+                    type: 'text',
+                    readonly: true,
+                    value: profile.systemPrompt || 'No system prompt configured'
+                },
+                style: {
+                    backgroundColor: prefersDark ? '#2a2a2a' : '#f5f5f5',
+                    cursor: 'default'
+                }
+            });
+            systemGroup.appendChild(systemLabel);
+            systemGroup.appendChild(systemInput);
+            
+            // User prompt
+            const userGroup = this.createElement('div', { className: 'quickllm-form-group' });
+            const userLabel = this.createElement('label', {
+                className: 'quickllm-label',
+                textContent: 'User Prompt:'
+            });
+            const userTextarea = this.createElement('textarea', {
+                className: 'quickllm-input',
+                id: 'quickllm-user-prompt',
+                attributes: {
+                    placeholder: 'Enter your user prompt (Shift+Enter for new line)',
+                    rows: '3'
+                },
+                textContent: profile.userPrompt || ''
+            });
+            userGroup.appendChild(userLabel);
+            userGroup.appendChild(userTextarea);
+            
+            // Info section
+            const infoGroup = this.createElement('div', { className: 'quickllm-form-group' });
+            const infoDiv = this.createElement('div', {
+                style: {
+                    fontSize: '8px',
+                    color: prefersDark ? '#aaa' : '#666',
+                    marginTop: '8px'
+                }
+            });
+            
+            const profileInfo = this.createElement('strong', { textContent: 'Profile: ' });
+            const profileText = document.createTextNode(`${profile.name} (${profile.type})`);
+            const br1 = document.createElement('br');
+            const shortcutsInfo = this.createElement('strong', { textContent: 'Keyboard shortcuts:' });
+            const br2 = document.createElement('br');
+            const shortcuts = document.createTextNode('• Enter: Process\n• Shift+Enter: New line in prompt\n• Enter again after response: Copy & Close\n• Escape: Close');
+            
+            infoDiv.appendChild(profileInfo);
+            infoDiv.appendChild(profileText);
+            infoDiv.appendChild(br1);
+            infoDiv.appendChild(shortcutsInfo);
+            infoDiv.appendChild(br2);
+            infoDiv.appendChild(shortcuts);
+            infoGroup.appendChild(infoDiv);
+            
+            leftSide.appendChild(textGroup);
+            leftSide.appendChild(systemGroup);
+            leftSide.appendChild(userGroup);
+            leftSide.appendChild(infoGroup);
+            
+            // Right side
+            const rightSide = this.createElement('div', { className: 'quickllm-modal-right' });
+            const responseContainer = this.createElement('div', {
+                id: 'quickllm-response-container',
+                style: {
+                    display: 'flex',
+                    flex: '1',
+                    flexDirection: 'column',
+                    minHeight: '0'
+                }
+            });
+            const responseLabel = this.createElement('label', {
+                className: 'quickllm-label',
+                textContent: 'AI Response:',
+                style: { flexShrink: '0' }
+            });
+            const responseDiv = this.createElement('div', {
+                className: 'quickllm-response',
+                id: 'quickllm-response',
+                style: {
+                    flex: '1',
+                    overflowY: 'auto',
+                    minHeight: '0'
+                }
+            });
+            responseContainer.appendChild(responseLabel);
+            responseContainer.appendChild(responseDiv);
+            rightSide.appendChild(responseContainer);
+            
+            body.appendChild(leftSide);
+            body.appendChild(rightSide);
+            
+            // Footer
+            const footer = this.createElement('div', {
+                style: {
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginTop: '20px',
+                    paddingTop: '16px',
+                    borderTop: `1px solid ${prefersDark ? '#444' : '#e5e5e5'}`
+                }
+            });
+            
+            const leftFooter = this.createElement('div');
+            const processBtn = this.createElement('button', {
+                className: 'quickllm-btn',
+                id: 'quickllm-process',
+                textContent: 'Process'
+            });
+            leftFooter.appendChild(processBtn);
+            
+            const rightFooter = this.createElement('div');
+            const copyBtn = this.createElement('button', {
+                className: 'quickllm-btn',
+                id: 'quickllm-copy',
+                textContent: 'Copy',
+                style: { display: 'none' }
+            });
+            rightFooter.appendChild(copyBtn);
+            
+            footer.appendChild(leftFooter);
+            footer.appendChild(rightFooter);
+            
+            modalContent.appendChild(header);
+            modalContent.appendChild(body);
+            modalContent.appendChild(footer);
+            
+            return modalContent;
+        };
 
         // Create shadow modal
         this.currentModal = new ShadowModal();
-        const { shadowRoot, modal } = await this.currentModal.create(modalContent, {
+        const { shadowRoot, modal } = await this.currentModal.create(createModalContent, {
             darkTheme: prefersDark,
             onClose: () => this.closeModal()
         });
@@ -309,37 +483,134 @@ class ContentManager {
     async showProfileSelector(profiles, text, textType) {
         const prefersDark = await prefersDarkMode();
         
-        const modalContent = `
-            <div class="quickllm-modal-content" style="max-width: 400px; min-height: auto; max-height: 90vh; overflow: hidden;">
-                <div class="quickllm-modal-header">
-                    <h3 class="quickllm-modal-title">Select Profile</h3>
-                    <button class="quickllm-close-btn">&times;</button>
-                </div>
+        const createModalContent = () => {
+            const modalContent = this.createElement('div', {
+                className: 'quickllm-modal-content',
+                style: {
+                    maxWidth: '400px',
+                    minHeight: 'auto',
+                    maxHeight: '90vh',
+                    overflow: 'hidden'
+                }
+            });
+            
+            // Header
+            const header = this.createElement('div', { className: 'quickllm-modal-header' });
+            const title = this.createElement('h3', {
+                className: 'quickllm-modal-title',
+                textContent: 'Select Profile'
+            });
+            const closeBtn = this.createElement('button', {
+                className: 'quickllm-close-btn',
+                textContent: '×'
+            });
+            header.appendChild(title);
+            header.appendChild(closeBtn);
+            
+            // Profile list
+            const profileList = this.createElement('div', {
+                className: 'quickllm-profile-list',
+                id: 'quickllm-profile-list'
+            });
+            
+            profiles.forEach((profile, index) => {
+                const profileItem = this.createElement('div', {
+                    className: `quickllm-profile-item ${index === 0 ? 'selected' : ''}`,
+                    attributes: {
+                        'data-profile-id': profile.id,
+                        'data-index': index.toString()
+                    }
+                });
                 
-                <div class="quickllm-profile-list" id="quickllm-profile-list">
-                    ${profiles.map((profile, index) => `
-                        <div class="quickllm-profile-item ${index === 0 ? 'selected' : ''}" data-profile-id="${profile.id}" data-index="${index}">
-                            <div style="display: flex; align-items: center; margin-bottom: 4px;">
-                                ${index < 10 ? `<span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background-color: ${prefersDark ? '#444' : '#e5e5e5'}; color: ${prefersDark ? '#ccc' : '#666'}; border-radius: 3px; font-size: 11px; font-weight: 600; margin-right: 8px; flex-shrink: 0;">${index === 9 ? '0' : (index + 1)}</span>` : ''}
-                                <div style="font-weight: 600; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; flex: 1;">${escapeHtml(profile.name)}</div>
-                            </div>
-                            <div style="font-size: 12px; color: ${prefersDark ? '#ccc' : '#666'}; word-wrap: break-word; overflow: hidden; text-overflow: ellipsis; ${index < 10 ? 'margin-left: 28px;' : ''}">${profile.type} - ${escapeHtml(profile.model)}</div>
-                        </div>
-                    `).join('')}
-                </div>
+                const profileHeader = this.createElement('div', {
+                    style: {
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginBottom: '4px'
+                    }
+                });
                 
-                <div style="margin-top: 16px; font-size: 12px; color: ${prefersDark ? '#aaa' : '#666'};">
-                    • Use arrow keys or number keys (1-0) to select a profile<br>
-                    • Enter to select<br>
-                    • Escape to cancel<br>
-                    • Hold Shift while selecting to bypass "Process immediately"
-                </div>
-            </div>
-        `;
+                if (index < 10) {
+                    const numberSpan = this.createElement('span', {
+                        textContent: index === 9 ? '0' : (index + 1).toString(),
+                        style: {
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '20px',
+                            height: '20px',
+                            backgroundColor: prefersDark ? '#444' : '#e5e5e5',
+                            color: prefersDark ? '#ccc' : '#666',
+                            borderRadius: '3px',
+                            fontSize: '11px',
+                            fontWeight: '600',
+                            marginRight: '8px',
+                            flexShrink: '0'
+                        }
+                    });
+                    profileHeader.appendChild(numberSpan);
+                }
+                
+                const profileName = this.createElement('div', {
+                    textContent: profile.name,
+                    style: {
+                        fontWeight: '600',
+                        wordWrap: 'break-word',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        flex: '1'
+                    }
+                });
+                profileHeader.appendChild(profileName);
+                
+                const profileDetails = this.createElement('div', {
+                    textContent: `${profile.type} - ${profile.model}`,
+                    style: {
+                        fontSize: '12px',
+                        color: prefersDark ? '#ccc' : '#666',
+                        wordWrap: 'break-word',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        marginLeft: index < 10 ? '28px' : '0'
+                    }
+                });
+                
+                profileItem.appendChild(profileHeader);
+                profileItem.appendChild(profileDetails);
+                profileList.appendChild(profileItem);
+            });
+            
+            // Instructions
+            const instructions = this.createElement('div', {
+                style: {
+                    marginTop: '16px',
+                    fontSize: '12px',
+                    color: prefersDark ? '#aaa' : '#666'
+                }
+            });
+            
+            const instructionLines = [
+                '• Use arrow keys or number keys (1-0) to select a profile',
+                '• Enter to select',
+                '• Escape to cancel',
+                '• Hold Shift while selecting to bypass "Process immediately"'
+            ];
+            
+            instructionLines.forEach((line, index) => {
+                if (index > 0) instructions.appendChild(document.createElement('br'));
+                instructions.appendChild(document.createTextNode(line));
+            });
+            
+            modalContent.appendChild(header);
+            modalContent.appendChild(profileList);
+            modalContent.appendChild(instructions);
+            
+            return modalContent;
+        };
 
         // Create shadow modal
         this.currentModal = new ShadowModal();
-        const { shadowRoot, modal } = await this.currentModal.create(modalContent, {
+        const { shadowRoot, modal } = await this.currentModal.create(createModalContent, {
             darkTheme: prefersDark,
             onClose: () => this.closeModal()
         });
@@ -430,13 +701,21 @@ class ContentManager {
         const streamId = `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         this.currentStreamId = streamId;
         
-        // Show loading state
-        responseElement.innerHTML = `
-            <div class="quickllm-loading">
-                <div class="quickllm-spinner"></div>
-                Processing...
-            </div>
-        `;
+        // Show loading state - use DOM APIs for static content
+        while (responseElement.firstChild) {
+            responseElement.removeChild(responseElement.firstChild);
+        }
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'quickllm-loading';
+        
+        const spinnerDiv = document.createElement('div');
+        spinnerDiv.className = 'quickllm-spinner';
+        
+        const loadingText = document.createTextNode('Processing...');
+        
+        loadingDiv.appendChild(spinnerDiv);
+        loadingDiv.appendChild(loadingText);
+        responseElement.appendChild(loadingDiv);
         processBtn.disabled = true;
         userPromptInput.disabled = true;
 
@@ -454,10 +733,8 @@ class ContentManager {
             if (response.success) {
                 // Only process if this is still the current stream
                 if (this.currentStreamId === streamId) {
-                    // Render response as markdown
-                    const renderedContent = markdownRenderer.render(response.response);
-                    responseElement.innerHTML = renderedContent;
-                    responseElement.classList.add('markdown-content');
+                    // Render response as markdown using helper method
+                    this.renderMarkdownToElement(response.response, responseElement);
                     
                     // Show copy button now that we have a response
                     const copyBtn = this.currentModal.querySelector('#quickllm-copy');
@@ -478,7 +755,14 @@ class ContentManager {
         } catch (error) {
             // Only show error if this is still the current stream
             if (this.currentStreamId === streamId) {
-                responseElement.innerHTML = `<div style="color: #dc3545;">Error: ${escapeHtml(error.message)}</div>`;
+                // Use DOM APIs for error message
+                while (responseElement.firstChild) {
+                    responseElement.removeChild(responseElement.firstChild);
+                }
+                const errorDiv = document.createElement('div');
+                errorDiv.style.color = '#dc3545';
+                errorDiv.textContent = `Error: ${error.message}`;
+                responseElement.appendChild(errorDiv);
             }
         } finally {
             // Only re-enable controls if this is still the current stream
@@ -499,10 +783,8 @@ class ContentManager {
         if (this.currentModal && this.currentStreamId === streamId) {
             const responseElement = this.currentModal.querySelector('#quickllm-response');
             if (responseElement) {
-                // Render streaming content as markdown
-                const renderedContent = markdownRenderer.render(content);
-                responseElement.innerHTML = renderedContent;
-                responseElement.classList.add('markdown-content');
+                // Render streaming content as markdown using helper method
+                this.renderMarkdownToElement(content, responseElement);
             }
         }
     }
@@ -510,25 +792,59 @@ class ContentManager {
     async showResponseModal(content) {
         const prefersDark = await prefersDarkMode();
         
-        const modalContent = `
-            <div class="quickllm-modal-content">
-                <div class="quickllm-modal-header">
-                    <h3 class="quickllm-modal-title">AI Response</h3>
-                    <button class="quickllm-close-btn">&times;</button>
-                </div>
-                
-                <div class="quickllm-response markdown-content">${markdownRenderer.render(content)}</div>
-                
-                <div style="margin-top: 16px;">
-                    <button class="quickllm-btn" id="quickllm-copy-response">Copy</button>
-                    <button class="quickllm-btn quickllm-btn-secondary" id="quickllm-close-response">Close</button>
-                </div>
-            </div>
-        `;
+        const createModalContent = () => {
+            const modalContent = this.createElement('div', { className: 'quickllm-modal-content' });
+            
+            // Header
+            const header = this.createElement('div', { className: 'quickllm-modal-header' });
+            const title = this.createElement('h3', {
+                className: 'quickllm-modal-title',
+                textContent: 'AI Response'
+            });
+            const closeBtn = this.createElement('button', {
+                className: 'quickllm-close-btn',
+                textContent: '×'
+            });
+            header.appendChild(title);
+            header.appendChild(closeBtn);
+            
+            // Response content
+            const responseDiv = this.createElement('div', {
+                className: 'quickllm-response markdown-content'
+            });
+            // Use helper method to render markdown content
+            this.renderMarkdownToElement(content, responseDiv);
+            
+            // Buttons
+            const buttonContainer = this.createElement('div', {
+                style: { marginTop: '16px' }
+            });
+            
+            const copyBtn = this.createElement('button', {
+                className: 'quickllm-btn',
+                id: 'quickllm-copy-response',
+                textContent: 'Copy'
+            });
+            
+            const closeResponseBtn = this.createElement('button', {
+                className: 'quickllm-btn quickllm-btn-secondary',
+                id: 'quickllm-close-response',
+                textContent: 'Close'
+            });
+            
+            buttonContainer.appendChild(copyBtn);
+            buttonContainer.appendChild(closeResponseBtn);
+            
+            modalContent.appendChild(header);
+            modalContent.appendChild(responseDiv);
+            modalContent.appendChild(buttonContainer);
+            
+            return modalContent;
+        };
 
         // Create shadow modal
         this.currentModal = new ShadowModal();
-        const { shadowRoot, modal } = await this.currentModal.create(modalContent, {
+        const { shadowRoot, modal } = await this.currentModal.create(createModalContent, {
             darkTheme: prefersDark,
             onClose: () => this.closeModal()
         });
@@ -544,26 +860,54 @@ class ContentManager {
     async showError(message) {
         const prefersDark = await prefersDarkMode();
         
-        const modalContent = `
-            <div class="quickllm-modal-content">
-                <div class="quickllm-modal-header">
-                    <h3 class="quickllm-modal-title">Error</h3>
-                    <button class="quickllm-close-btn">&times;</button>
-                </div>
-                
-                <div style="color: #dc3545; padding: 16px;">
-                    ${escapeHtml(message)}
-                </div>
-                
-                <div style="margin-top: 16px;">
-                    <button class="quickllm-btn quickllm-btn-secondary" id="quickllm-close-error">Close</button>
-                </div>
-            </div>
-        `;
+        const createModalContent = () => {
+            const modalContent = this.createElement('div', { className: 'quickllm-modal-content' });
+            
+            // Header
+            const header = this.createElement('div', { className: 'quickllm-modal-header' });
+            const title = this.createElement('h3', {
+                className: 'quickllm-modal-title',
+                textContent: 'Error'
+            });
+            const closeBtn = this.createElement('button', {
+                className: 'quickllm-close-btn',
+                textContent: '×'
+            });
+            header.appendChild(title);
+            header.appendChild(closeBtn);
+            
+            // Error message
+            const errorDiv = this.createElement('div', {
+                textContent: message,
+                style: {
+                    color: '#dc3545',
+                    padding: '16px'
+                }
+            });
+            
+            // Close button
+            const buttonContainer = this.createElement('div', {
+                style: { marginTop: '16px' }
+            });
+            
+            const closeErrorBtn = this.createElement('button', {
+                className: 'quickllm-btn quickllm-btn-secondary',
+                id: 'quickllm-close-error',
+                textContent: 'Close'
+            });
+            
+            buttonContainer.appendChild(closeErrorBtn);
+            
+            modalContent.appendChild(header);
+            modalContent.appendChild(errorDiv);
+            modalContent.appendChild(buttonContainer);
+            
+            return modalContent;
+        };
 
         // Create shadow modal
         this.currentModal = new ShadowModal();
-        const { shadowRoot, modal } = await this.currentModal.create(modalContent, {
+        const { shadowRoot, modal } = await this.currentModal.create(createModalContent, {
             darkTheme: prefersDark,
             onClose: () => this.closeModal()
         });

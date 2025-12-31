@@ -6,6 +6,15 @@
   "author": "deseven",
   "homepage_url": "https://github.com/deseven/firefox-quickllm",
   
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "quickllm@d7.wtf",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  },
+  
   "permissions": [
     "activeTab",
     "contextMenus",

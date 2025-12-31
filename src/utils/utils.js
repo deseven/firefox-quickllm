@@ -102,9 +102,12 @@ export async function saveProfiles(profiles) {
  * @returns {string} Escaped HTML
  */
 export function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 /**
@@ -139,7 +142,20 @@ export async function prefersDarkMode() {
 export function renderMarkdownContent(content, element) {
     if (!element || !content) return;
     
+    // Clear existing content
+    while (element.firstChild) {
+        element.removeChild(element.firstChild);
+    }
+    
     const renderedContent = markdownRenderer.render(content);
-    element.innerHTML = renderedContent;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(renderedContent, 'text/html');
+    
+    // Move all children from parsed document to target element
+    const bodyChildren = Array.from(doc.body.childNodes);
+    bodyChildren.forEach(child => {
+        element.appendChild(child);
+    });
+    
     element.classList.add('markdown-content');
 }

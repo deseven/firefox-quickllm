@@ -24,7 +24,7 @@ class ShadowModal {
 
     /**
      * Create a modal with Shadow DOM isolation
-     * @param {string} content - HTML content for the modal
+     * @param {Element|Function} content - DOM element or function that creates DOM elements for the modal
      * @param {Object} options - Modal options
      * @returns {Object} - Shadow root and modal element references
      */
@@ -53,7 +53,16 @@ class ShadowModal {
         // Create modal container
         const modalContainer = document.createElement('div');
         modalContainer.className = darkTheme ? `${className} quickllm-dark-theme` : className;
-        modalContainer.innerHTML = content;
+        
+        // Handle content - either DOM element or function that creates DOM elements
+        if (typeof content === 'function') {
+            const contentElement = content();
+            modalContainer.appendChild(contentElement);
+        } else if (content instanceof Element) {
+            modalContainer.appendChild(content);
+        } else {
+            throw new Error('Content must be a DOM element or a function that returns a DOM element');
+        }
         
         // Ensure modal container can receive pointer events
         modalContainer.style.pointerEvents = 'auto';

@@ -72,7 +72,10 @@ class ProfileManager {
         loadingState.classList.add('d-none');
 
         if (this.profiles.length === 0) {
-            profilesList.innerHTML = '';
+            // Clear existing content using DOM APIs
+            while (profilesList.firstChild) {
+                profilesList.removeChild(profilesList.firstChild);
+            }
             emptyState.classList.remove('d-none');
             addProfileSection.classList.add('d-none');
             return;
@@ -81,61 +84,129 @@ class ProfileManager {
         emptyState.classList.add('d-none');
         addProfileSection.classList.remove('d-none');
         
-        profilesList.innerHTML = this.profiles.map((profile, index) => `
-            <div class="profile-item" data-profile-id="${profile.id}">
-                <div class="profile-header">
-                    <i class="bx bx-menu drag-handle"></i>
-                    <h6 class="profile-name">${escapeHtml(profile.name)}</h6>
-                    <span class="profile-type ${profile.type}">
-                        <i class='bxl bx-${profile.type}'></i>
-                    </span>
-                </div>
-                <div class="profile-details">
-                    <div class="profile-model">
-                        ${escapeHtml(profile.model)}${profile.endpoint ? ` (${escapeHtml(this.formatEndpoint(profile.endpoint))})` : ''}
-                    </div>
-                    <div class="profile-options">
-                        <small class="text-muted">
-                            <i class="bx ${profile.processImmediately ? 'bx-check-square' : 'bx-square'}" title="Process immediately"></i>
-                            Process immediately
-                        </small>
-                        <div class="profile-actions">
-                            <button class="btn clone-profile-btn" data-profile-id="${profile.id}" title="Clone profile">
-                                <i class='bx bx-copy-plus'></i>
-                            </button>
-                            <button class="btn edit-profile-btn" data-profile-id="${profile.id}" title="Edit profile">
-                                <i class="bx bx-edit"></i>
-                            </button>
-                            <button class="btn delete-profile-btn" data-profile-id="${profile.id}" title="Delete profile">
-                                <i class="bx bx-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-
-        // Add event listeners for clone, edit and delete buttons
-        profilesList.querySelectorAll('.clone-profile-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const profileId = e.currentTarget.getAttribute('data-profile-id');
-                this.cloneProfile(profileId);
-            });
+        // Clear existing content using DOM APIs
+        while (profilesList.firstChild) {
+            profilesList.removeChild(profilesList.firstChild);
+        }
+        
+        // Create profile items using DOM APIs
+        this.profiles.forEach((profile, index) => {
+            const profileItem = this.createProfileElement(profile);
+            profilesList.appendChild(profileItem);
         });
 
-        profilesList.querySelectorAll('.edit-profile-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const profileId = e.currentTarget.getAttribute('data-profile-id');
-                this.editProfile(profileId);
-            });
+        // Event listeners are now added in createProfileElement method
+    }
+
+    createProfileElement(profile) {
+        // Create main profile item container
+        const profileItem = document.createElement('div');
+        profileItem.className = 'profile-item';
+        profileItem.setAttribute('data-profile-id', profile.id);
+
+        // Create profile header
+        const profileHeader = document.createElement('div');
+        profileHeader.className = 'profile-header';
+
+        const dragHandle = document.createElement('i');
+        dragHandle.className = 'bx bx-menu drag-handle';
+
+        const profileName = document.createElement('h6');
+        profileName.className = 'profile-name';
+        profileName.textContent = profile.name;
+
+        const profileType = document.createElement('span');
+        profileType.className = `profile-type ${profile.type}`;
+        const typeIcon = document.createElement('i');
+        typeIcon.className = `bxl bx-${profile.type}`;
+        profileType.appendChild(typeIcon);
+
+        profileHeader.appendChild(dragHandle);
+        profileHeader.appendChild(profileName);
+        profileHeader.appendChild(profileType);
+
+        // Create profile details
+        const profileDetails = document.createElement('div');
+        profileDetails.className = 'profile-details';
+
+        const profileModel = document.createElement('div');
+        profileModel.className = 'profile-model';
+        const modelText = profile.endpoint ?
+            `${profile.model} (${this.formatEndpoint(profile.endpoint)})` :
+            profile.model;
+        profileModel.textContent = modelText;
+
+        const profileOptions = document.createElement('div');
+        profileOptions.className = 'profile-options';
+
+        const processInfo = document.createElement('small');
+        processInfo.className = 'text-muted';
+        const processIcon = document.createElement('i');
+        processIcon.className = `bx ${profile.processImmediately ? 'bx-check-square' : 'bx-square'}`;
+        processIcon.setAttribute('title', 'Process immediately');
+        processInfo.appendChild(processIcon);
+        processInfo.appendChild(document.createTextNode(' Process immediately'));
+
+        const profileActions = document.createElement('div');
+        profileActions.className = 'profile-actions';
+
+        // Clone button
+        const cloneBtn = document.createElement('button');
+        cloneBtn.className = 'btn clone-profile-btn';
+        cloneBtn.setAttribute('data-profile-id', profile.id);
+        cloneBtn.setAttribute('title', 'Clone profile');
+        const cloneIcon = document.createElement('i');
+        cloneIcon.className = 'bx bx-copy-plus';
+        cloneBtn.appendChild(cloneIcon);
+
+        // Edit button
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn edit-profile-btn';
+        editBtn.setAttribute('data-profile-id', profile.id);
+        editBtn.setAttribute('title', 'Edit profile');
+        const editIcon = document.createElement('i');
+        editIcon.className = 'bx bx-edit';
+        editBtn.appendChild(editIcon);
+
+        // Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn delete-profile-btn';
+        deleteBtn.setAttribute('data-profile-id', profile.id);
+        deleteBtn.setAttribute('title', 'Delete profile');
+        const deleteIcon = document.createElement('i');
+        deleteIcon.className = 'bx bx-trash';
+        deleteBtn.appendChild(deleteIcon);
+
+        // Add event listeners
+        cloneBtn.addEventListener('click', (e) => {
+            const profileId = e.currentTarget.getAttribute('data-profile-id');
+            this.cloneProfile(profileId);
         });
 
-        profilesList.querySelectorAll('.delete-profile-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const profileId = e.currentTarget.getAttribute('data-profile-id');
-                this.deleteProfile(profileId);
-            });
+        editBtn.addEventListener('click', (e) => {
+            const profileId = e.currentTarget.getAttribute('data-profile-id');
+            this.editProfile(profileId);
         });
+
+        deleteBtn.addEventListener('click', (e) => {
+            const profileId = e.currentTarget.getAttribute('data-profile-id');
+            this.deleteProfile(profileId);
+        });
+
+        profileActions.appendChild(cloneBtn);
+        profileActions.appendChild(editBtn);
+        profileActions.appendChild(deleteBtn);
+
+        profileOptions.appendChild(processInfo);
+        profileOptions.appendChild(profileActions);
+
+        profileDetails.appendChild(profileModel);
+        profileDetails.appendChild(profileOptions);
+
+        profileItem.appendChild(profileHeader);
+        profileItem.appendChild(profileDetails);
+
+        return profileItem;
     }
 
     navigateToEditPage(profileId = null) {
