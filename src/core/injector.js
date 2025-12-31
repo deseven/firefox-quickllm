@@ -108,6 +108,19 @@ class ContentManager {
             linkStyle: 'inlined'
         });
         
+        // Add custom rule to remove media elements completely
+        turndownService.addRule('removeMedia', {
+            filter: function (node) {
+                return node.nodeName === 'IMG' ||
+                       node.nodeName === 'VIDEO' ||
+                       node.nodeName === 'AUDIO' ||
+                       node.nodeName === 'SVG';
+            },
+            replacement: function () {
+                return ''; // Return empty string to completely remove the element
+            }
+        });
+        
         // Convert HTML to Markdown, which preserves structure better than plain text
         let markdown = turndownService.turndown(clonedElement);
         
