@@ -20,8 +20,8 @@ A Firefox extension (manifest v2) that integrates Large Language Models (LLMs) d
 
 1. Clone this repository:
    ```bash
-   git clone <repository-url>
-   cd QuickLLM
+   git clone https://github.com/deseven/firefox-quickllm.git
+   cd firefox-quickllm
    ```
 
 2. Install dependencies:
@@ -51,12 +51,14 @@ A Firefox extension (manifest v2) that integrates Large Language Models (LLMs) d
 
 ### Processing Text
 
-1. Select any text on a webpage (or don't select anything to send full page as a context).
+1. Select any text on a webpage or don't select anything to send full page as a context.
 2. Right-click and select "QuickLLM" or press `⌃⇧I` (`⌘⇧I` on macOS), the hotkey could be changed under "Manage Extension Shortcuts" in Firefox.
-3. Select a profile if you have more than one.
+3. Select a profile if you have more than one. Profiles could be selected using mouse, arrow keys or hotkeys from 1 to 0.
 
 
 ## Contributing
+
+Contributions are welcome! Feel free to submit a pull request.
 
 1. Fork the repository
 2. Create a branch
@@ -67,4 +69,4 @@ A Firefox extension (manifest v2) that integrates Large Language Models (LLMs) d
 
 ## Support
 
-For issues and feature requests, please create an issue.
+For issues and feature requests, please [create an issue](https://github.com/deseven/firefox-quickllm/issues/new).
