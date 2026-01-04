@@ -3,10 +3,11 @@ const { polyfillNode } = require('esbuild-plugin-polyfill-node');
 const fs = require('fs');
 const path = require('path');
 
-// Read version from manifest.json and license
+// Read version from manifest.json, license, and usage guide
 const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
 const version = manifest.version;
 const license = fs.readFileSync('LICENSE', 'utf8');
+const usageGuide = fs.readFileSync('USAGE.md', 'utf8');
 
 // Plugin to handle CSS files that need to be converted to strings
 const cssToStringPlugin = {
@@ -32,6 +33,7 @@ const htmlPlugin = {
         { template: 'src/pages/process/process.html', output: 'process.html', chunk: 'process' },
         { template: 'src/pages/profile-edit/profile-edit.html', output: 'profile-edit.html', chunk: 'profile-edit' },
         { template: 'src/pages/settings/settings.html', output: 'settings.html', chunk: 'settings' },
+        { template: 'src/pages/help/help.html', output: 'help.html', chunk: 'help' },
       ];
 
       for (const htmlFile of htmlFiles) {
@@ -68,7 +70,8 @@ const buildOptions = {
     process: './src/pages/process/process.js',
     injector: './src/core/injector.js',
     'profile-edit': './src/pages/profile-edit/profile-edit.js',
-    settings: './src/pages/settings/settings.js'
+    settings: './src/pages/settings/settings.js',
+    help: './src/pages/help/help.js'
   },
   bundle: true,
   outdir: 'dist',
@@ -81,6 +84,7 @@ const buildOptions = {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
     'process.env.EXTENSION_VERSION': JSON.stringify(version),
     'process.env.EXTENSION_LICENSE': JSON.stringify(license),
+    'process.env.USAGE_GUIDE': JSON.stringify(usageGuide),
   },
   plugins: [
     polyfillNode({

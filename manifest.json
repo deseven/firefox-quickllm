@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "QuickLLM",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Integrate LLMs (OpenAI/Anthropic/Ollama and compatible APIs) with your browser for quick page text processing",
   "author": "deseven",
   "homepage_url": "https://github.com/deseven/firefox-quickllm",
@@ -53,7 +53,7 @@
   "commands": {
     "open-quickllm": {
       "suggested_key": {
-        "default": "Ctrl+Shift+I",
+        "default": "Alt+Shift+I",
         "mac": "Command+Shift+I"
       },
       "description": "Open QuickLLM to process selected text or page content"

@@ -1,0 +1,259 @@
+/* Help page styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: #212529;
+    background-color: #ffffff;
+    margin: 0;
+    padding: 0;
+}
+
+/* Dark theme support */
+body.dark-theme {
+    background-color: #2d2d2d;
+    color: #ffffff;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header */
+.help-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.help-header h1 {
+    color: #0d6efd;
+    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    font-weight: 600;
+}
+
+.help-header h1 i {
+    margin-right: 0.5rem;
+}
+
+.help-header .lead {
+    font-size: 1.2rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.version-info {
+    font-size: 0.9rem;
+    color: #6c757d;
+    background: #f8f9fa;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    display: inline-block;
+}
+
+/* Dark theme header */
+body.dark-theme .help-header h1 {
+    color: #4dabf7;
+}
+
+body.dark-theme .help-header .lead {
+    color: #adb5bd;
+}
+
+body.dark-theme .version-info {
+    color: #adb5bd;
+    background: #495057;
+}
+
+/* Content */
+.help-content {
+    margin-bottom: 3rem;
+}
+
+.help-content h1 {
+    color: #0d6efd;
+    border-bottom: 2px solid #0d6efd;
+    padding-bottom: 0.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.help-content h2 {
+    color: #0d6efd;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.help-content h3 {
+    color: #6c757d;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+}
+
+.help-content h4 {
+    color: #6c757d;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+/* Dark theme content */
+body.dark-theme .help-content h1 {
+    color: #4dabf7;
+    border-bottom-color: #4dabf7;
+}
+
+body.dark-theme .help-content h2 {
+    color: #4dabf7;
+}
+
+body.dark-theme .help-content h3 {
+    color: #adb5bd;
+}
+
+body.dark-theme .help-content h4 {
+    color: #adb5bd;
+}
+
+.help-content p {
+    margin-bottom: 1rem;
+}
+
+.help-content ul, .help-content ol {
+    margin-bottom: 1rem;
+    padding-left: 1.5rem;
+}
+
+.help-content li {
+    margin-bottom: 0.5rem;
+}
+
+.help-content code {
+    background: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.9em;
+    color: #dc3545;
+}
+
+.help-content pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+}
+
+.help-content pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+}
+
+.help-content blockquote {
+    border-left: 4px solid #0d6efd;
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+.help-content blockquote p {
+    margin-bottom: 0;
+}
+
+.help-content a {
+    color: #0d6efd;
+    text-decoration: none;
+}
+
+.help-content a:hover {
+    text-decoration: underline;
+}
+
+.help-content kbd {
+    background: #212529;
+    color: #f8f9fa;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 0.85em;
+    font-family: monospace;
+}
+
+/* Dark theme code and content */
+body.dark-theme .help-content code {
+    background: #495057;
+    color: #ff6b6b;
+}
+
+body.dark-theme .help-content pre {
+    background: #495057;
+}
+
+body.dark-theme .help-content blockquote {
+    border-left-color: #4dabf7;
+    background: #495057;
+}
+
+body.dark-theme .help-content a {
+    color: #4dabf7;
+}
+
+body.dark-theme .help-content kbd {
+    background: #f8f9fa;
+    color: #212529;
+}
+
+/* Tables */
+.help-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.help-content th,
+.help-content td {
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    text-align: left;
+}
+
+.help-content th {
+    background: #f8f9fa;
+    font-weight: 600;
+}
+
+/* Dark theme tables */
+body.dark-theme .help-content th,
+body.dark-theme .help-content td {
+    border-color: #495057;
+}
+
+body.dark-theme .help-content th {
+    background: #495057;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .help-header h1 {
+        font-size: 2rem;
+    }
+    
+    .help-content h1 {
+        font-size: 1.75rem;
+    }
+    
+    .help-content h2 {
+        font-size: 1.4rem;
+    }
+}

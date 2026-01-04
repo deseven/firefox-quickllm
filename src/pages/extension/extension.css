@@ -450,30 +450,35 @@ body.dark-theme .prompt-template-name {
     cursor: not-allowed;
 }
 
-/* Settings gear button styling */
-#settingsBtn {
+/* Settings and Help button styling */
+#settingsBtn,
+#helpBtn {
     border-color: #6c757d;
     color: #6c757d;
     transition: all 0.2s ease;
 }
 
-#settingsBtn:hover {
+#settingsBtn:hover,
+#helpBtn:hover {
     border-color: #495057;
     color: #495057;
     background-color: #f8f9fa;
 }
 
-#settingsBtn:focus {
+#settingsBtn:focus,
+#helpBtn:focus {
     box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.25);
 }
 
-/* Dark theme support for settings button */
-body.dark-theme #settingsBtn {
+/* Dark theme support for settings and help buttons */
+body.dark-theme #settingsBtn,
+body.dark-theme #helpBtn {
     border-color: #adb5bd;
     color: #adb5bd;
 }
 
-body.dark-theme #settingsBtn:hover {
+body.dark-theme #settingsBtn:hover,
+body.dark-theme #helpBtn:hover {
     border-color: #dee2e6;
     color: #dee2e6;
     background-color: #495057;

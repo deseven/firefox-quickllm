@@ -245,7 +245,14 @@ class ContentManager {
             const br1 = document.createElement('br');
             const shortcutsInfo = createElement('strong', { textContent: 'Keyboard shortcuts:' });
             const br2 = document.createElement('br');
-            const shortcuts = document.createTextNode('• Enter: Process\n• Shift+Enter: New line in prompt\n• Enter again after response: Copy & Close\n• Escape: Close');
+            const shortcuts = createElement('span');
+            shortcuts.appendChild(document.createTextNode('• Enter: Process (one time per unique prompt)'));
+            shortcuts.appendChild(document.createElement('br'));
+            shortcuts.appendChild(document.createTextNode('• Shift+Enter: New line in prompt'));
+            shortcuts.appendChild(document.createElement('br'));
+            shortcuts.appendChild(document.createTextNode('• Enter again after response: Copy & Close'));
+            shortcuts.appendChild(document.createElement('br'));
+            shortcuts.appendChild(document.createTextNode('• Escape: Close'));
             
             infoDiv.appendChild(profileInfo);
             infoDiv.appendChild(profileText);

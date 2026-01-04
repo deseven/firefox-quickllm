@@ -8,7 +8,7 @@ A Firefox extension (manifest v2) that integrates Large Language Models (LLMs) d
 ## Features
 
 - Supports OpenAI, Anthropic, Ollama or compatible APIs
-- Callable on any page by a shortcut `⌃⇧I` (or `⌘⇧I` on macOS)
+- Callable on any page by a shortcut `Alt-Shift-I` (or `⌘⇧I` on macOS)
 - Allows to define multiple LLM profiles for specific tasks
 - Allows you to feed to the LLM the entire page content or just the selected text
 - QoL stuff like realtime streaming, markdown rendering, keyboard hotkeys, dark theme, profiles import/export, etc
@@ -43,17 +43,7 @@ A Firefox extension (manifest v2) that integrates Large Language Models (LLMs) d
 
 ## Usage
 
-### Setting up Profiles
-
-1. Click the QuickLLM extension icon in the toolbar.
-2. Click "Add Profile" to create your first profile.
-3. Pick "Advanced" mode if you need to define custom API endpoint or other advanced (duh) parameters.
-
-### Processing Text
-
-1. Select any text on a webpage or don't select anything to send full page as a context.
-2. Right-click and select "QuickLLM" or press `⌃⇧I` (`⌘⇧I` on macOS), the hotkey could be changed under "Manage Extension Shortcuts" in Firefox.
-3. Select a profile if you have more than one. Profiles could be selected using mouse, arrow keys or hotkeys from 1 to 0.
+See [USAGE.md](https://github.com/deseven/firefox-quickllm/blob/main/USAGE.md), the version-specific usage guide is always included with the packaged extension and accessible by pressing the question sign in the main extension window.
 
 
 ## Contributing

@@ -43,6 +43,11 @@ class ProfileManager {
             this.navigateToSettingsPage();
         });
 
+        // Help button
+        document.getElementById('helpBtn').addEventListener('click', () => {
+            this.navigateToHelpPage();
+        });
+
         // Note: Modal-related functionality moved to process.js
     }
 
@@ -215,6 +220,10 @@ class ProfileManager {
 
     navigateToSettingsPage() {
         browser.tabs.create({ url: browser.runtime.getURL('dist/settings.html') });
+    }
+
+    navigateToHelpPage() {
+        browser.tabs.create({ url: browser.runtime.getURL('dist/help.html') });
     }
 
     editProfile(profileId) {
