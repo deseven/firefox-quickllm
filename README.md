@@ -2,6 +2,8 @@
 
 A Firefox extension (manifest v2) that integrates Large Language Models (LLMs) directly into your browser for seamless text processing and AI assistance. For some reason I failed to find anything even remotely similar in the Add-ons and I really needed a way to quickly feed web data to various models.
 
+The extension could be seen in action in [the demo video](https://d7.wtf/s/quickllm-demo.mp4).
+
 **NOTE: You need to have API access to the model you want, either directly from OpenAI, Anthropic, DeepSeek and others, or via custom routers like OpenRouter, Open WebUI, Ollama and so on.**
 
 
