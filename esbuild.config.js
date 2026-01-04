@@ -39,14 +39,15 @@ const htmlPlugin = {
       for (const htmlFile of htmlFiles) {
         let html = await fs.promises.readFile(htmlFile.template, 'utf8');
         
-        // Inject the script tag before closing body tag
+        // Inject the polyfill script first, then the main script
+        const polyfillTag = `<script src="browser-polyfill.js"></script>`;
         const scriptTag = `<script src="${htmlFile.chunk}.js"></script>`;
         const cssTag = `<link rel="stylesheet" href="${htmlFile.chunk}.css">`;
         
         if (html.includes('</body>')) {
-          html = html.replace('</body>', `${scriptTag}\n</body>`);
+          html = html.replace('</body>', `${polyfillTag}\n${scriptTag}\n</body>`);
         } else {
-          html += `\n${scriptTag}`;
+          html += `\n${polyfillTag}\n${scriptTag}`;
         }
         
         if (html.includes('</head>')) {
@@ -65,6 +66,7 @@ const htmlPlugin = {
 
 const buildOptions = {
   entryPoints: {
+    'browser-polyfill': './src/core/browser-polyfill.js',
     background: './src/core/background.js',
     extension: './src/pages/extension/extension.js',
     process: './src/pages/process/process.js',

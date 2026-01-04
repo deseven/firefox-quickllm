@@ -27,7 +27,7 @@
   ],
   
   "background": {
-    "scripts": ["dist/background.js"],
+    "scripts": ["dist/browser-polyfill.js", "dist/background.js"],
     "persistent": true
   },
   
@@ -45,7 +45,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["dist/injector.js"],
+      "js": ["dist/browser-polyfill.js", "dist/injector.js"],
       "run_at": "document_end"
     }
   ],
