@@ -1,7 +1,7 @@
 // Help page for QuickLLM extension
 import './help.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import markdownRenderer from '../../utils/markdown-renderer.js';
+import { renderMarkdownToElement } from '../../utils/dom-utils.js';
 import { applyTheme } from '../../utils/utils.js';
 
 class HelpPage {
@@ -20,7 +20,7 @@ class HelpPage {
         const usageGuide = process.env.USAGE_GUIDE;
         
         if (usageGuide && helpContent) {
-            helpContent.innerHTML = markdownRenderer.render(usageGuide);
+            renderMarkdownToElement(usageGuide, helpContent);
         }
     }
 
