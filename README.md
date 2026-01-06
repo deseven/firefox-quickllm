@@ -4,7 +4,8 @@ A Firefox extension (manifest v2) that integrates Large Language Models (LLMs) d
 
 The extension could be seen in action in [the demo video](https://d7.wtf/s/quickllm-demo.mp4).
 
-**NOTE: You need to have API access to the model you want, either directly from OpenAI, Anthropic, DeepSeek and others, or via custom routers like OpenRouter, Open WebUI, Ollama and so on.**
+> [!IMPORTANT]
+> You need to have API access to the model you want, either directly from OpenAI, Anthropic, DeepSeek and others, or via custom routers like OpenRouter, Open WebUI, Ollama and so on.
 
 
 ## Features
@@ -14,6 +15,11 @@ The extension could be seen in action in [the demo video](https://d7.wtf/s/quick
 - Allows to define multiple LLM profiles for specific tasks
 - Allows you to feed to the LLM the entire page content or just the selected text
 - QoL stuff like realtime streaming, markdown rendering, keyboard hotkeys, dark theme, profiles import/export, etc
+
+
+## Browser Support
+
+**Only Firefox is officially supported at the moment.** Basic compatibility with Chrome was implemented too and I've tested the extension in Brave, but your mileage may vary.
 
 
 ## Installation

@@ -23,11 +23,35 @@ const cssToStringPlugin = {
   },
 };
 
-// Plugin to copy HTML files and inject scripts
-const htmlPlugin = {
-  name: 'html-plugin',
+// Plugin to copy assets and HTML files
+const assetsPlugin = {
+  name: 'assets-plugin',
   setup(build) {
     build.onEnd(async () => {
+      // Copy boxicons assets
+      const boxiconsSourceDir = 'node_modules/boxicons';
+      const boxiconsDestDir = 'dist/assets/boxicons';
+      
+      // Create boxicons directory
+      await fs.promises.mkdir(path.join(boxiconsDestDir, 'css'), { recursive: true });
+      await fs.promises.mkdir(path.join(boxiconsDestDir, 'fonts'), { recursive: true });
+      
+      // Copy CSS file
+      await fs.promises.copyFile(
+        path.join(boxiconsSourceDir, 'css/boxicons.min.css'),
+        path.join(boxiconsDestDir, 'css/boxicons.min.css')
+      );
+      
+      // Copy font files
+      const fontFiles = ['boxicons.eot', 'boxicons.svg', 'boxicons.ttf', 'boxicons.woff', 'boxicons.woff2'];
+      for (const fontFile of fontFiles) {
+        await fs.promises.copyFile(
+          path.join(boxiconsSourceDir, 'fonts', fontFile),
+          path.join(boxiconsDestDir, 'fonts', fontFile)
+        );
+      }
+
+      // Process HTML files
       const htmlFiles = [
         { template: 'src/pages/extension/extension.html', output: 'extension.html', chunk: 'extension' },
         { template: 'src/pages/process/process.html', output: 'process.html', chunk: 'process' },
@@ -104,7 +128,7 @@ const buildOptions = {
       },
     }),
     cssToStringPlugin,
-    htmlPlugin,
+    assetsPlugin,
   ],
   loader: {
     '.css': 'css',
