@@ -28,26 +28,29 @@ const assetsPlugin = {
   name: 'assets-plugin',
   setup(build) {
     build.onEnd(async () => {
-      // Copy boxicons assets
-      const boxiconsSourceDir = 'node_modules/boxicons';
+      // Copy local boxicons assets
+      const boxiconsSourceDir = 'src/assets/boxicons';
       const boxiconsDestDir = 'dist/assets/boxicons';
       
       // Create boxicons directory
-      await fs.promises.mkdir(path.join(boxiconsDestDir, 'css'), { recursive: true });
-      await fs.promises.mkdir(path.join(boxiconsDestDir, 'fonts'), { recursive: true });
+      await fs.promises.mkdir(boxiconsDestDir, { recursive: true });
       
-      // Copy CSS file
+      // Copy CSS files
       await fs.promises.copyFile(
-        path.join(boxiconsSourceDir, 'css/boxicons.min.css'),
-        path.join(boxiconsDestDir, 'css/boxicons.min.css')
+        path.join(boxiconsSourceDir, 'boxicons.min.css'),
+        path.join(boxiconsDestDir, 'boxicons.min.css')
+      );
+      await fs.promises.copyFile(
+        path.join(boxiconsSourceDir, 'boxicons-brands.min.css'),
+        path.join(boxiconsDestDir, 'boxicons-brands.min.css')
       );
       
       // Copy font files
-      const fontFiles = ['boxicons.eot', 'boxicons.svg', 'boxicons.ttf', 'boxicons.woff', 'boxicons.woff2'];
+      const fontFiles = ['boxicons.ttf', 'boxicons.woff', 'boxicons.woff2', 'boxicons-brands.ttf', 'boxicons-brands.woff', 'boxicons-brands.woff2'];
       for (const fontFile of fontFiles) {
         await fs.promises.copyFile(
-          path.join(boxiconsSourceDir, 'fonts', fontFile),
-          path.join(boxiconsDestDir, 'fonts', fontFile)
+          path.join(boxiconsSourceDir, fontFile),
+          path.join(boxiconsDestDir, fontFile)
         );
       }
 

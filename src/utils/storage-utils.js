@@ -180,12 +180,12 @@ export async function getProfilesResponse() {
  * @returns {boolean} True if valid
  */
 export function validateProfile(profile) {
-    return profile && 
-           typeof profile.id === 'string' && 
-           typeof profile.name === 'string' && 
-           typeof profile.type === 'string' && 
+    return profile &&
+           typeof profile.id === 'string' &&
+           typeof profile.name === 'string' &&
+           typeof profile.type === 'string' &&
            typeof profile.model === 'string' &&
-           typeof profile.apiKey === 'string';
+           (typeof profile.apiKey === 'string' || profile.apiKey === null);
 }
 
 /**

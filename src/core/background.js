@@ -190,7 +190,7 @@ class BackgroundManager {
 
     async processWithOpenAI(apiKey, endpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController) {
         const openai = new OpenAI({
-            apiKey: apiKey,
+            apiKey: apiKey || 'dummy-key', // Some APIs don't require keys but OpenAI SDK requires a value
             baseURL: endpoint || undefined,
             dangerouslyAllowBrowser: true
         });
@@ -259,7 +259,7 @@ class BackgroundManager {
 
     async processWithAnthropic(apiKey, endpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController) {
         const anthropic = new Anthropic({
-            apiKey: apiKey,
+            apiKey: apiKey || 'dummy-key', // Some APIs don't require keys but Anthropic SDK requires a value
             baseURL: endpoint || undefined,
             dangerouslyAllowBrowser: true
         });

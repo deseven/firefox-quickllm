@@ -1,6 +1,6 @@
 {
   "name": "quickllm",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "",
   "main": "popup.js",
   "scripts": {
@@ -15,7 +15,6 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
     "bootstrap": "^5.3.8",
-    "boxicons": "^2.1.4",
     "highlight.js": "^11.11.1",
     "marked": "^17.0.1",
     "ollama": "^0.6.3",

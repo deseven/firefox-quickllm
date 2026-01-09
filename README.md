@@ -5,7 +5,7 @@ A Firefox extension (manifest v2) that integrates Large Language Models (LLMs) d
 The extension could be seen in action in [the demo video](https://d7.wtf/s/quickllm-demo.mp4).
 
 > [!IMPORTANT]
-> You need to have API access to the model you want, either directly from OpenAI, Anthropic, DeepSeek and others, or via custom routers like OpenRouter, Open WebUI, Ollama and so on.
+> You need to have API access to the model you want, either directly from OpenAI, Anthropic, DeepSeek and others, or via custom routers like OpenRouter, Open WebUI, Ollama, llama.cpp and so on.
 
 
 ## Features

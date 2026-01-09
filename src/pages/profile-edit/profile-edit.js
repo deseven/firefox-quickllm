@@ -235,7 +235,7 @@ class ProfileEditor {
             name: formData.get('profileName').trim(),
             type: formData.get('profileType'),
             endpoint: formData.get('apiEndpoint').trim() || null,
-            apiKey: formData.get('apiKey').trim(),
+            apiKey: formData.get('apiKey').trim() || null,
             model: formData.get('modelName').trim(),
             extraOptions: extraOptionsText || null,
             systemPrompt: (formData.get('systemPrompt') || '').trim(),
@@ -244,7 +244,7 @@ class ProfileEditor {
         };
 
         // Validation
-        if (!profileData.name || !profileData.type || !profileData.apiKey || !profileData.model || !profileData.systemPrompt) {
+        if (!profileData.name || !profileData.type || !profileData.model || !profileData.systemPrompt) {
             this.showError('Please fill in all required fields.');
             return;
         }

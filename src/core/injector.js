@@ -574,6 +574,12 @@ class ContentManager {
             profileItems.forEach((item, index) => {
                 if (index === selectedIndex) {
                     item.classList.add('selected');
+                    // Scroll the selected item into view
+                    item.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'nearest'
+                    });
                 } else {
                     item.classList.remove('selected');
                 }

@@ -101,10 +101,10 @@ Settings page (accessible by pressing on the gear in the top right) also allows 
 
 ## Custom Routers
 
-For services like OpenRouter, Open WebUI, or other compatible APIs (most of them use OpenAI format):
+For services like OpenRouter, Open WebUI, llama.cpp or other compatible APIs (most of them use OpenAI format):
 - Use **Advanced mode** when creating profiles
 - Set the **Custom Endpoint** to your service URL
-- Use the appropriate API key and model names
+- Use the appropriate API key (if your API requires it) and model names
 
 
 # Troubleshooting

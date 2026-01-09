@@ -174,11 +174,12 @@ class SettingsManager {
 
             // Basic validation of profile structure
             const isValidProfile = (profile) => {
-                return profile && 
-                       typeof profile.id === 'string' && 
-                       typeof profile.name === 'string' && 
-                       typeof profile.type === 'string' && 
-                       typeof profile.model === 'string';
+                return profile &&
+                       typeof profile.id === 'string' &&
+                       typeof profile.name === 'string' &&
+                       typeof profile.type === 'string' &&
+                       typeof profile.model === 'string' &&
+                       (typeof profile.apiKey === 'string' || profile.apiKey === null || profile.apiKey === undefined);
             };
 
             if (!importedProfiles.every(isValidProfile)) {
