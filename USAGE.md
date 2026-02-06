@@ -7,12 +7,10 @@ Profiles define how QuickLLM connects to different AI services and what instruct
 ## Creating Your First Profile
 
 1. Click the QuickLLM extension icon in the toolbar
-2. Click **"Create Your First Profile"** or **"Add Profile"**
+2. Click **"Create Your First Profile"**
 3. Choose between **Basic** or **Advanced** mode:
-   - **Basic:** Simple setup with default endpoints
+   - **Basic:** Simple setup with default endpoints for common providers
    - **Advanced:** Custom API endpoints and extra options
-
-If you only plan to use OpenAI or Anthropic APIs directly, you should probably stick to Basic mode.
 
 
 ## Profile Configuration
@@ -51,6 +49,8 @@ The user prompt adds additional instructions. This is typically not needed, unle
 There are two ways to activate QuickLLM on any webpage:
 1. **Keyboard shortcut:** Press `Alt+Shift+I` (`⌘⇧I` on macOS), the shortcut could be changed in Firefox by going to the "Manage Your Extensions" page, pressing on the gear icon and selecting "Manage Extension Shortcuts".
 2. **Context menu:** Right-click and select "QuickLLM".
+3. **Extension window:** Click on the extension icon in the browser toolbar.
+
 
 ## Text Processing
 
@@ -65,25 +65,15 @@ If you have multiple profiles, you can select them using:
 - **Arrow keys:** Navigate up/down and press Enter
 - **Number keys:** Press 1-0 for quick selection
 
+\* arrow and number keys don't work in the extension window
 
-## Managing Profiles
 
-From the main extension window, you can:
-- **Reorder:** Drag profiles using the ☰ handle
-- **Clone:** 📋 Duplicate a profile for modification
-- **Edit:** ✏️ Modify profile settings
-- **Delete:** 🗑️ Remove unwanted profiles
+## Settings
 
-Settings page (accessible by pressing on the gear in the top right) also allows you to export or import profiles.
+Settings page (accessible by pressing on the gear in the top right of the main extension window) allows you to set a theme, add, edit, reorderm import or export the profiles.
 
 
 # API Providers
-
-## OpenAI
-
-- **API Key:** Get from [OpenAI Platform](https://platform.openai.com/api-keys)
-- **Model:** Pick from [OpenAI Docs](https://platform.openai.com/docs/models)
-
 
 ## Anthropic
 
@@ -91,12 +81,36 @@ Settings page (accessible by pressing on the gear in the top right) also allows 
 - **Model:** Pick from [Anthropic Docs](https://platform.claude.com/docs/en/about-claude/models/overview)
 
 
+## DeepSeek
+
+- **API Key:** Get from [DeepSeek Console](https://platform.deepseek.com/)
+- **Model:** Pick from [DeepSeek Docs](https://api-docs.deepseek.com/quick_start/pricing)
+
+
 ## Ollama
 
 - **Setup:** Install and run Ollama locally or elsewhere
-- **API Key:** Whatever you set it to when configuring
+- **API Key:** Whatever you set it to when configuring (could be empty)
 - **Model:** Any model you have
 - **Endpoint:** Whatever your endpoint is
+
+
+## OpenAI
+
+- **API Key:** Get from [OpenAI Platform](https://platform.openai.com/api-keys)
+- **Model:** Pick from [OpenAI Docs](https://platform.openai.com/docs/models)
+
+
+## OpenRouter
+
+- **API Key:** Get from [OpenRouter](https://openrouter.ai/settings/keys)
+- **Model:** Pick from [OpenRouter Models](https://openrouter.ai/models) (for example `z-ai/glm-4.7-flash`)
+
+
+## Together.ai
+
+- **API Key:** Get from [Together.ai](https://api.together.ai/)
+- **Model:** Pick from [Together.ai Models](https://www.together.ai/pricing) (for example `moonshotai/Kimi-K2.5`)
 
 
 ## Custom Routers
@@ -113,8 +127,8 @@ For services like OpenRouter, Open WebUI, llama.cpp or other compatible APIs (mo
 
 ### Extension doesn't activate
 - Check if the keyboard shortcut conflicts with other extensions or browser shortcuts
-- Try using the right-click context menu instead
-- Ensure the extension is enabled in Firefox
+- Try using the right-click context menu instead or calling from the extension window
+- Ensure the extension is enabled in your browser
 
 ### API errors
 - Read the error (duh)
