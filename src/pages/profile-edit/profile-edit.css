@@ -25,7 +25,8 @@ body.dark-theme {
 
 .container {
     padding: 8px;
-    max-width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
 /* Form Sections */

@@ -19,7 +19,7 @@ class ContentManager {
         browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
             switch (message.type) {
                 case 'processContent':
-                    this.handleProcessContent();
+                    this.handleProcessContent(message.profileId);
                     break;
 
                 case 'streamUpdate':
@@ -32,13 +32,13 @@ class ContentManager {
         });
     }
 
-    async handleProcessContent() {
+    async handleProcessContent(profileId = null) {
         // Get selected text using the browser's selection API
         const selectedText = this.getSelectedText();
         
         if (selectedText && selectedText.trim()) {
             // Process selected text
-            this.showPromptModal(selectedText, 'selected text');
+            await this.showPromptModal(selectedText, 'selected text', null, false, profileId);
         } else {
             // Process page content
             const pageText = this.getPageText();
@@ -46,7 +46,7 @@ class ContentManager {
                 await this.showError('No text found on this page');
                 return;
             }
-            this.showPromptModal(pageText, 'page content');
+            await this.showPromptModal(pageText, 'page content', null, false, profileId);
         }
     }
 
@@ -132,7 +132,7 @@ class ContentManager {
         return markdown;
     }
 
-    async showPromptModal(text, textType, selectedProfile = null, bypassProcessImmediately = false) {
+    async showPromptModal(text, textType, selectedProfile = null, bypassProcessImmediately = false, profileId = null) {
         // Get profiles
         const profilesResponse = await browser.runtime.sendMessage({ type: 'getProfiles' });
         const profiles = profilesResponse.profiles || [];
@@ -140,6 +140,15 @@ class ContentManager {
         if (profiles.length === 0) {
             await this.showError('No profiles configured. Please add a profile first.');
             return;
+        }
+
+        // If profileId is provided, find that specific profile
+        if (profileId && !selectedProfile) {
+            selectedProfile = profiles.find(p => p.id === profileId);
+            if (!selectedProfile) {
+                await this.showError('Selected profile not found.');
+                return;
+            }
         }
 
         // If no profile selected and multiple profiles exist, show profile selector first

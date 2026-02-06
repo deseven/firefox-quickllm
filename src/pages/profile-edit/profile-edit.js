@@ -255,11 +255,13 @@ class ProfileEditor {
             const result = await getStorageData('profiles');
             let profiles = result.profiles || [];
             
+            let isEdit = false;
             if (this.profileId) {
                 // Edit existing profile
                 const index = profiles.findIndex(p => p.id === this.profileId);
                 if (index !== -1) {
                     profiles[index] = { ...profiles[index], ...profileData };
+                    isEdit = true;
                 }
             } else {
                 // Add new profile
@@ -272,8 +274,8 @@ class ProfileEditor {
             // Notify background script to update context menus
             await sendRuntimeMessage({ type: 'profilesUpdated' });
             
-            // Go back to main page
-            this.goBack();
+            // Go back to main page with appropriate notification
+            this.goBack(isEdit);
             
         } catch (error) {
             console.error('Error saving profile:', error);
@@ -283,9 +285,17 @@ class ProfileEditor {
         }
     }
 
-    goBack() {
-        // Navigate back to extension
-        window.location.href = 'extension.html';
+    goBack(isEdit = null) {
+        // Navigate back to settings page with Profiles tab active
+        // Pass notification type if profile was saved
+        if (isEdit === true) {
+            window.location.href = 'settings.html#profile-edited';
+        } else if (isEdit === false) {
+            window.location.href = 'settings.html#profile-created';
+        } else {
+            // Cancelled - just go to profiles tab
+            window.location.href = 'settings.html#profiles';
+        }
     }
 
     showLoading(show) {
