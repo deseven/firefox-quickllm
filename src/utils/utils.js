@@ -68,3 +68,17 @@ export function escapeHtml(text) {
 export function generateId() {
     return 'profile_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
 }
+
+/**
+ * Get default endpoint for profile types that have one
+ * @param {string} type - Profile type (openrouter, together, deepseek, etc.)
+ * @returns {string|null} Default endpoint URL or null if no default exists
+ */
+export function getDefaultEndpoint(type) {
+    const defaultEndpoints = {
+        'openrouter': 'https://openrouter.ai/api/v1',
+        'together': 'https://api.together.xyz/v1',
+        'deepseek': 'https://api.deepseek.com/v1'
+    };
+    return defaultEndpoints[type] || null;
+}

@@ -2,6 +2,7 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import { Ollama } from 'ollama/browser';
+import { getDefaultEndpoint } from '../utils/utils.js';
 
 class BackgroundManager {
     constructor() {
@@ -152,12 +153,15 @@ class BackgroundManager {
         }
         
         try {
-            if (type === 'openai') {
-                return await this.processWithOpenAI(apiKey, endpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController);
+            // Get the effective endpoint (use default if not specified)
+            const effectiveEndpoint = endpoint || getDefaultEndpoint(type);
+            
+            if (type === 'openai' || type === 'openrouter' || type === 'together' || type === 'deepseek') {
+                return await this.processWithOpenAI(apiKey, effectiveEndpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController);
             } else if (type === 'anthropic') {
-                return await this.processWithAnthropic(apiKey, endpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController);
+                return await this.processWithAnthropic(apiKey, effectiveEndpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController);
             } else if (type === 'ollama') {
-                return await this.processWithOllama(apiKey, endpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController);
+                return await this.processWithOllama(apiKey, effectiveEndpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController);
             } else {
                 throw new Error('Unsupported profile type');
             }

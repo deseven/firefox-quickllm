@@ -162,7 +162,7 @@ class ContentManager {
             const header = createElement('div', { className: 'quickllm-modal-header' });
             const title = createElement('h3', {
                 className: 'quickllm-modal-title',
-                textContent: `Process ${textType}`
+                textContent: `Process ${textType} - ${profile.name} (${profile.type})`
             });
             const closeBtn = createElement('button', {
                 className: 'quickllm-close-btn',
@@ -240,11 +240,8 @@ class ContentManager {
                 }
             });
             
-            const profileInfo = createElement('strong', { textContent: 'Profile: ' });
-            const profileText = document.createTextNode(`${profile.name} (${profile.type})`);
-            const br1 = document.createElement('br');
             const shortcutsInfo = createElement('strong', { textContent: 'Keyboard shortcuts:' });
-            const br2 = document.createElement('br');
+            const br = document.createElement('br');
             const shortcuts = createElement('span');
             shortcuts.appendChild(document.createTextNode('• Enter: Process (one time per unique prompt)'));
             shortcuts.appendChild(document.createElement('br'));
@@ -254,11 +251,8 @@ class ContentManager {
             shortcuts.appendChild(document.createElement('br'));
             shortcuts.appendChild(document.createTextNode('• Escape: Close'));
             
-            infoDiv.appendChild(profileInfo);
-            infoDiv.appendChild(profileText);
-            infoDiv.appendChild(br1);
             infoDiv.appendChild(shortcutsInfo);
-            infoDiv.appendChild(br2);
+            infoDiv.appendChild(br);
             infoDiv.appendChild(shortcuts);
             infoGroup.appendChild(infoDiv);
             

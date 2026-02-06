@@ -4,7 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import * as bootstrap from 'bootstrap';
 import Sortable from 'sortablejs';
 import { PROMPT_TEMPLATES } from '../../utils/prompt-templates.js';
-import { applyTheme, loadProfiles, saveProfiles, escapeHtml, generateId, clearElement, formatEndpointForDisplay } from '../../utils/utils.js';
+import { applyTheme, loadProfiles, saveProfiles, escapeHtml, generateId, clearElement, formatEndpointForDisplay, getDefaultEndpoint } from '../../utils/utils.js';
 
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
@@ -99,6 +99,41 @@ class ProfileManager {
         // Event listeners are now added in createProfileElement method
     }
 
+    getProfileIcon(profile) {
+        // Determine the correct icon based on profile type and endpoint
+        const type = profile.type;
+        const endpoint = profile.endpoint;
+
+        // DeepSeek uses its own icon
+        if (type === 'deepseek') {
+            return 'bxl bx-deepseek';
+        }
+
+        // OpenRouter and Together.ai use brain-circuit icon
+        if (type === 'openrouter' || type === 'together') {
+            return 'bx bx-brain-circuit';
+        }
+
+        // OpenAI with custom endpoint uses brain-circuit icon
+        // (only if endpoint is set, since openrouter/together/deepseek have default endpoints)
+        if (type === 'openai' && endpoint) {
+            return 'bx bx-brain-circuit';
+        }
+
+        // Default: use the type name as icon (openai, anthropic, ollama)
+        return `bxl bx-${type}`;
+    }
+
+    shouldDisplayEndpoint(profile) {
+        // Only display endpoint if it's custom (not the default for this type)
+        if (!profile.endpoint) {
+            return false;
+        }
+        const defaultEndpoint = getDefaultEndpoint(profile.type);
+        // Show endpoint if there's no default, or if it differs from the default
+        return !defaultEndpoint || profile.endpoint !== defaultEndpoint;
+    }
+
     createProfileElement(profile) {
         // Create main profile item container
         const profileItem = document.createElement('div');
@@ -119,7 +154,7 @@ class ProfileManager {
         const profileType = document.createElement('span');
         profileType.className = `profile-type ${profile.type}`;
         const typeIcon = document.createElement('i');
-        typeIcon.className = `bxl bx-${profile.type}`;
+        typeIcon.className = this.getProfileIcon(profile);
         profileType.appendChild(typeIcon);
 
         profileHeader.appendChild(dragHandle);
@@ -132,7 +167,7 @@ class ProfileManager {
 
         const profileModel = document.createElement('div');
         profileModel.className = 'profile-model';
-        const modelText = profile.endpoint ?
+        const modelText = this.shouldDisplayEndpoint(profile) ?
             `${profile.model} (${formatEndpointForDisplay(profile.endpoint)})` :
             profile.model;
         profileModel.textContent = modelText;

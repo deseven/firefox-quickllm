@@ -176,6 +176,21 @@ body.dark-theme .profile-actions .delete-profile-btn:hover {
     color: #f57c00;
 }
 
+.profile-type.openrouter {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.profile-type.together {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.profile-type.deepseek {
+    background: #e0f2f1;
+    color: #00695c;
+}
+
 .profile-type i {
     font-size: 1.1rem;
 }
