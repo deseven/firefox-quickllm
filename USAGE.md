@@ -46,19 +46,19 @@ Settings page (accessible by pressing on the gear in the top right of the main e
 
 ## Profile Configuration
 
-### Basic Settings
+#### Basic Settings
 - **Name:** A descriptive name for your profile, I suggest calling the profile by the action it's going to perform, for example "Summarize" or "Translate"
 - **Type:** Choose the type of API
 - **API Key:** Your API key from the provider
 - **Model:** Model name (e.g., gpt-5, claude-haiku-4-5)
 
-### Advanced Settings
+#### Advanced Settings
 - **Custom Endpoint:** For custom API routers
 - **Extra Options:** JSON format API parameters
 - **User Prompt:** Additional prompt before content
 
 
-## Prompts
+### Prompts
 
 The system prompt guides the AI's behavior. You can:
 - Write your own custom prompt
@@ -68,7 +68,7 @@ The system prompt guides the AI's behavior. You can:
 The user prompt adds additional instructions. This is typically not needed, unless you want to have some quick prompt template that you can use immediately when calling profile or replace with something else (in case **Process immediately** is not enabled, see below).
 
 
-## Processing Options
+### Processing Options
 
 - **Process immediately:** Skip profile selection and process automatically, not asking for user prompt
 
