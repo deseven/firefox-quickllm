@@ -4,6 +4,8 @@ Profiles define how QuickLLM connects to different AI services and what instruct
 
 > **Important:** You need API access to the model you want to use, either directly from OpenAI, Anthropic, DeepSeek and others, or via custom routers like OpenRouter, Open WebUI, Ollama and so on.
 
+# Using the Extension
+
 ## Creating Your First Profile
 
 1. Click the QuickLLM extension icon in the toolbar
@@ -11,7 +13,36 @@ Profiles define how QuickLLM connects to different AI services and what instruct
 3. Choose between **Basic** or **Advanced** mode:
    - **Basic:** Simple setup with default endpoints for common providers
    - **Advanced:** Custom API endpoints and extra options
+4. Fill all required fields. For detailed guide see **"Profile Configuration"** section below.
 
+
+## Activating QuickLLM
+
+There are two ways to activate QuickLLM on any webpage:
+1. **Keyboard shortcut:** Press `Alt+Shift+I` (`⌘⇧I` on macOS), the shortcut could be changed in Firefox by going to the "Manage Your Extensions" page, pressing on the gear icon and selecting "Manage Extension Shortcuts".
+2. **Context menu:** Right-click and select "QuickLLM".
+3. **Extension window:** Click on the extension icon in the browser toolbar.
+
+
+## Text Processing
+
+- **Selected text:** Select any text on the page before activating
+- **Full page:** Don't select anything to send the entire page content
+
+
+## Profile Selection
+
+If you have multiple profiles, you can select them using:
+- **Mouse:** Click on the desired profile
+- **Arrow keys:** Navigate up/down and press Enter
+- **Number keys:** Press 1-0 for quick selection
+
+\* arrow and number keys don't work in the extension window
+
+
+# Settings
+
+Settings page (accessible by pressing on the gear in the top right of the main extension window) allows you to set a theme, add, edit, reorder, import or export the profiles.
 
 ## Profile Configuration
 
@@ -40,37 +71,6 @@ The user prompt adds additional instructions. This is typically not needed, unle
 ## Processing Options
 
 - **Process immediately:** Skip profile selection and process automatically, not asking for user prompt
-
-
-# Using the Extension
-
-## Activating QuickLLM
-
-There are two ways to activate QuickLLM on any webpage:
-1. **Keyboard shortcut:** Press `Alt+Shift+I` (`⌘⇧I` on macOS), the shortcut could be changed in Firefox by going to the "Manage Your Extensions" page, pressing on the gear icon and selecting "Manage Extension Shortcuts".
-2. **Context menu:** Right-click and select "QuickLLM".
-3. **Extension window:** Click on the extension icon in the browser toolbar.
-
-
-## Text Processing
-
-- **Selected text:** Select any text on the page before activating
-- **Full page:** Don't select anything to send the entire page content
-
-
-## Profile Selection
-
-If you have multiple profiles, you can select them using:
-- **Mouse:** Click on the desired profile
-- **Arrow keys:** Navigate up/down and press Enter
-- **Number keys:** Press 1-0 for quick selection
-
-\* arrow and number keys don't work in the extension window
-
-
-## Settings
-
-Settings page (accessible by pressing on the gear in the top right of the main extension window) allows you to set a theme, add, edit, reorderm import or export the profiles.
 
 
 # API Providers
