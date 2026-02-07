@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "QuickLLM",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Integrate LLMs (OpenAI/Anthropic/Ollama and compatible APIs) with your browser for quick page text processing",
   "author": "deseven",
   "homepage_url": "https://github.com/deseven/firefox-quickllm",
