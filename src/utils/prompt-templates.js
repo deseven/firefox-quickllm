@@ -10,23 +10,23 @@ export const PROMPT_TEMPLATES = [
     },
     {
         name: "Summarize",
-        prompt: "Summarize the following text, return only the text summary." + genericSuffix
+        prompt: "Summarize the following text. Reply only with the text summary with no extra comments." + genericSuffix
     },
     {
         name: "Improve",
-        prompt: "Improve the following text, return only the improved text." + genericSuffix
+        prompt: "Improve the following text. Reply only with the improved text with no extra comments." + genericSuffix
     },
     {
         name: "Spellcheck",
-        prompt: "Do a spellcheck on the following text, return only the fixed text." + genericSuffix
+        prompt: "Correct any spelling or grammar mistakes in the following text. Reply only with the corrected text with no extra comments. If there are no mistakes, return the same exact text." + genericSuffix
     },
     {
         name: "Format",
-        prompt: "Format the following text using markdown, return only the text in markdown format." + genericSuffix
+        prompt: "Format the following text using markdown. Reply only with the Markdown text with no extra comments." + genericSuffix
     },
     {
         name: "Translate",
-        prompt: "Translate the following text to %INPUT_DESIRED_LANGUAGE_HERE%, return only the translated text." + genericSuffix
+        prompt: "Translate the following text to %INPUT_DESIRED_LANGUAGE_HERE%. Reply only with the translated text with no extra comments." + genericSuffix
     },
     {
         name: "Analyze",

@@ -177,6 +177,7 @@ class ProfileEditor {
                 document.getElementById('systemPrompt').value = profile.systemPrompt || '';
                 document.getElementById('userPrompt').value = profile.userPrompt || '';
                 document.getElementById('processImmediately').checked = profile.processImmediately || false;
+                document.getElementById('diffOutput').checked = profile.diffOutput || false;
                 
                 // Automatically switch to advanced mode if any advanced fields have values
                 const shouldBeAdvanced = this.detectAdvancedMode();
@@ -205,6 +206,7 @@ class ProfileEditor {
         document.getElementById('systemPrompt').value = profile.systemPrompt || '';
         document.getElementById('userPrompt').value = profile.userPrompt || '';
         document.getElementById('processImmediately').checked = profile.processImmediately || false;
+        document.getElementById('diffOutput').checked = profile.diffOutput || false;
         
         // Automatically switch to advanced mode if any advanced fields have values
         const shouldBeAdvanced = this.detectAdvancedMode();
@@ -240,7 +242,8 @@ class ProfileEditor {
             extraOptions: extraOptionsText || null,
             systemPrompt: (formData.get('systemPrompt') || '').trim(),
             userPrompt: (formData.get('userPrompt') || '').trim() || null,
-            processImmediately: document.getElementById('processImmediately').checked
+            processImmediately: document.getElementById('processImmediately').checked,
+            diffOutput: document.getElementById('diffOutput').checked
         };
 
         // Validation

@@ -47,6 +47,10 @@ export {
     copyToClipboardWithFeedback
 } from './dom-utils.js';
 
+// Diff renderer
+export { default as diffRenderer } from './diff-renderer.js';
+export { DiffRenderer } from './diff-renderer.js';
+
 /**
  * Escape HTML to prevent XSS attacks
  * @param {string} text - Text to escape

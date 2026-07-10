@@ -1,5 +1,5 @@
 // Content script for QuickLLM extension
-import { escapeHtml, prefersDarkMode, createElement, clearElement, renderMarkdownToElement, createLoadingElement, showErrorState } from '../utils/utils.js';
+import { escapeHtml, prefersDarkMode, createElement, clearElement, renderMarkdownToElement, createLoadingElement, showErrorState, diffRenderer } from '../utils/utils.js';
 import ShadowModal from '../utils/shadow-modal.js';
 import TurndownService from 'turndown';
 
@@ -8,6 +8,8 @@ class ContentManager {
         this.currentModal = null;
         this.currentElement = null;
         this.currentStreamId = null;
+        this.currentDiffMode = false;
+        this.currentDiffOriginalText = null;
         this.init();
     }
 
@@ -194,7 +196,7 @@ class ContentManager {
             });
             const textPreview = createElement('div', {
                 className: 'quickllm-text-preview',
-                textContent: text.substring(0, 500) + (text.length > 500 ? '...' : '')
+                textContent: text
             });
             textGroup.appendChild(textLabel);
             textGroup.appendChild(textPreview);
@@ -657,10 +659,15 @@ class ContentManager {
         const responseElement = this.currentModal.querySelector('#quickllm-response');
         const processBtn = this.currentModal.querySelector('#quickllm-process');
         const userPromptInput = this.currentModal.querySelector('#quickllm-user-prompt');
+        const useDiff = !!profile.diffOutput;
         
         // Generate unique stream ID for this request
         const streamId = `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         this.currentStreamId = streamId;
+        // Store diff context for streaming updates
+        this.currentDiffMode = useDiff;
+        this.currentDiffOriginalText = useDiff ? text : null;
+        this._diffStreamThrottle = null;
         
         // Show loading state using utility function
         clearElement(responseElement);
@@ -683,8 +690,13 @@ class ContentManager {
             if (response.success) {
                 // Only process if this is still the current stream
                 if (this.currentStreamId === streamId) {
-                    // Render response as markdown using utility function
-                    renderMarkdownToElement(response.response, responseElement);
+                    if (useDiff) {
+                        // Render response as a diff against the original input text
+                        diffRenderer.renderToElement(text, response.response, responseElement);
+                    } else {
+                        // Render response as markdown using utility function
+                        renderMarkdownToElement(response.response, responseElement);
+                    }
                     
                     // Show copy button now that we have a response
                     const copyBtn = this.currentModal.querySelector('#quickllm-copy');
@@ -726,8 +738,36 @@ class ContentManager {
         if (this.currentModal && this.currentStreamId === streamId) {
             const responseElement = this.currentModal.querySelector('#quickllm-response');
             if (responseElement) {
-                // Render streaming content as markdown using utility function
-                renderMarkdownToElement(content, responseElement);
+                if (this.currentDiffMode) {
+                    // For large input texts, throttle diff updates for performance.
+                    // Diffing on every token can be expensive, so we limit re-renders
+                    // to once per animation frame when the original text is large.
+                    const shouldThrottle = this.currentDiffOriginalText &&
+                        this.currentDiffOriginalText.length >= 10000;
+                    if (shouldThrottle) {
+                        if (this._diffStreamThrottle) {
+                            this._diffStreamThrottle.content = content;
+                        } else {
+                            this._diffStreamThrottle = { content };
+                            requestAnimationFrame(() => {
+                                if (this._diffStreamThrottle) {
+                                    diffRenderer.renderToElement(
+                                        this.currentDiffOriginalText,
+                                        this._diffStreamThrottle.content,
+                                        responseElement
+                                    );
+                                    this._diffStreamThrottle = null;
+                                }
+                            });
+                        }
+                    } else {
+                        // Render streaming content as a diff against the original input text
+                        diffRenderer.renderToElement(this.currentDiffOriginalText, content, responseElement);
+                    }
+                } else {
+                    // Render streaming content as markdown using utility function
+                    renderMarkdownToElement(content, responseElement);
+                }
             }
         }
     }
