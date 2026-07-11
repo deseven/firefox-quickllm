@@ -289,6 +289,126 @@
     flex-shrink: 0;
 }
 
+/* Prompt modal layout */
+.quickllm-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e5e5;
+}
+
+.quickllm-modal-right .quickllm-response-container {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.quickllm-modal-right .quickllm-response-label {
+    flex-shrink: 0;
+}
+
+.quickllm-modal-right .quickllm-response {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.quickllm-shortcuts-info {
+    font-size: 8px;
+    color: #666;
+    margin-top: 8px;
+}
+
+/* Profile selector */
+.quickllm-profile-selector {
+    max-width: 400px;
+    min-height: auto;
+    max-height: 90vh;
+    overflow: hidden;
+}
+
+.quickllm-profile-item-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.quickllm-profile-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background-color: #e5e5e5;
+    color: #666;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.quickllm-profile-name {
+    font-weight: 600;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+.quickllm-profile-details {
+    font-size: 12px;
+    color: #666;
+    word-wrap: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.quickllm-profile-details.with-number {
+    margin-left: 28px;
+}
+
+.quickllm-profile-instructions {
+    margin-top: 16px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* Error modal */
+.quickllm-error-message {
+    color: #dc3545;
+    padding: 16px;
+}
+
+.quickllm-button-container {
+    margin-top: 16px;
+}
+
+/* Dark theme overrides for the new classes */
+.quickllm-modal.quickllm-dark-theme .quickllm-modal-footer {
+    border-top-color: #444;
+}
+
+.quickllm-modal.quickllm-dark-theme .quickllm-shortcuts-info {
+    color: #aaa;
+}
+
+.quickllm-modal.quickllm-dark-theme .quickllm-profile-number {
+    background-color: #444;
+    color: #ccc;
+}
+
+.quickllm-modal.quickllm-dark-theme .quickllm-profile-details {
+    color: #ccc;
+}
+
+.quickllm-modal.quickllm-dark-theme .quickllm-profile-instructions {
+    color: #aaa;
+}
+
 .quickllm-profile-list {
     max-height: calc(90vh - 120px);
     overflow-y: auto;
