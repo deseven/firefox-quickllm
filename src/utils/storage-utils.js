@@ -1,6 +1,12 @@
 // Storage utilities for QuickLLM extension
 // Consolidates browser storage operations and profile management
 
+import {
+    obfuscateProfileApiKeys,
+    deobfuscateProfileApiKeys,
+    profilesNeedMigration
+} from './crypto-utils.js';
+
 /**
  * Get data from browser storage with error handling
  * @param {string|Array|Object} keys - Storage keys to retrieve
@@ -37,7 +43,20 @@ export async function setStorageData(data) {
 export async function loadProfiles() {
     try {
         const result = await getStorageData('profiles');
-        return result.profiles || [];
+        const rawProfiles = result.profiles || [];
+
+        // Deobfuscate API keys for in-memory use. Profiles saved after the
+        // §3.1 security work carry an `enc:v1:` prefix; legacy plaintext keys
+        // pass through unchanged.
+        const profiles = deobfuscateProfileApiKeys(rawProfiles);
+
+        // Seamlessly migrate any legacy plaintext keys to the obfuscated format
+        // so storage never holds raw keys after the first load.
+        if (profilesNeedMigration(rawProfiles)) {
+            await setStorageData({ profiles: obfuscateProfileApiKeys(profiles) });
+        }
+
+        return profiles;
     } catch (error) {
         console.error('Error loading profiles:', error);
         return [];
@@ -51,7 +70,10 @@ export async function loadProfiles() {
  */
 export async function saveProfiles(profiles) {
     try {
-        const success = await setStorageData({ profiles: profiles });
+        // Obfuscate API keys before they hit storage so plaintext keys are
+        // never persisted. In-memory callers continue to hold plaintext.
+        const storedProfiles = obfuscateProfileApiKeys(profiles);
+        const success = await setStorageData({ profiles: storedProfiles });
         if (success) {
             // Notify background script to update context menus
             await sendRuntimeMessage({ type: 'profilesUpdated' });

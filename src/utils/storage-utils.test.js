@@ -1,8 +1,14 @@
-// Tests for storage-utils.js — profile validation and ID generation.
-// These cover the logic touched during the §2.2 (generateId consolidation)
-// and §2.4 (unified profile validation) deduplication work.
-import { describe, it, expect } from 'vitest';
-import { validateProfile, validateProfiles, generateProfileId } from './storage-utils.js';
+// Tests for storage-utils.js — profile validation, ID generation, and the
+// API key obfuscation/migration behaviour
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import {
+    validateProfile,
+    validateProfiles,
+    generateProfileId,
+    loadProfiles,
+    saveProfiles
+} from './storage-utils.js';
+import { isObfuscatedKey, deobfuscateApiKey, obfuscateApiKey } from './crypto-utils.js';
 
 describe('validateProfile', () => {
     const validProfile = {
@@ -113,5 +119,140 @@ describe('generateProfileId', () => {
         expect(parts[0]).toBe('profile');
         expect(parts[1]).toMatch(/^\d+$/);
         expect(parts[2].length).toBeGreaterThanOrEqual(9);
+    });
+});
+
+describe('saveProfiles / loadProfiles obfuscation', () => {
+    const storageGet = vi.mocked(browser.storage.local.get);
+    const storageSet = vi.mocked(browser.storage.local.set);
+    const runtimeSend = vi.mocked(browser.runtime.sendMessage);
+
+    beforeEach(() => {
+        storageGet.mockReset();
+        storageSet.mockReset();
+        runtimeSend.mockReset().mockResolvedValue(undefined);
+    });
+
+    it('saveProfiles writes obfuscated API keys to storage', async () => {
+        const profiles = [
+            { id: '1', name: 'A', type: 'openai', model: 'gpt-4', apiKey: 'sk-secret' },
+            { id: '2', name: 'B', type: 'ollama', model: 'llama3', apiKey: null }
+        ];
+
+        await saveProfiles(profiles);
+
+        const stored = storageSet.mock.calls[0][0].profiles;
+        expect(isObfuscatedKey(stored[0].apiKey)).toBe(true);
+        expect(stored[0].apiKey).not.toContain('sk-secret');
+        // null keys stay null
+        expect(stored[1].apiKey).toBeNull();
+        // non-apiKey fields are preserved
+        expect(stored[0].name).toBe('A');
+    });
+
+    it('saveProfiles notifies the background script on success', async () => {
+        await saveProfiles([{ id: '1', apiKey: 'sk-x' }]);
+        expect(runtimeSend).toHaveBeenCalledWith({ type: 'profilesUpdated' });
+    });
+
+    it('loadProfiles returns plaintext keys when storage holds obfuscated values', async () => {
+        const plaintext = 'sk-my-key';
+        storageGet.mockResolvedValue({ profiles: [
+            { id: '1', apiKey: obfuscateApiKey(plaintext) }
+        ]});
+
+        const result = await loadProfiles();
+        expect(result[0].apiKey).toBe(plaintext);
+    });
+
+    it('loadProfiles returns [] when no profiles exist', async () => {
+        storageGet.mockResolvedValue({});
+        const result = await loadProfiles();
+        expect(result).toEqual([]);
+    });
+
+    it('loadProfiles round-trips through saveProfiles', async () => {
+        const original = [
+            { id: '1', name: 'A', type: 'openai', model: 'gpt-4', apiKey: 'sk-roundtrip' },
+            { id: '2', name: 'B', type: 'ollama', model: 'llama3', apiKey: null }
+        ];
+
+        await saveProfiles(original);
+        const stored = storageSet.mock.calls[0][0].profiles;
+        storageGet.mockResolvedValue({ profiles: stored });
+
+        const loaded = await loadProfiles();
+        expect(loaded).toEqual(original);
+    });
+});
+
+describe('loadProfiles legacy migration', () => {
+    const storageGet = vi.mocked(browser.storage.local.get);
+    const storageSet = vi.mocked(browser.storage.local.set);
+
+    beforeEach(() => {
+        storageGet.mockReset();
+        storageSet.mockReset();
+    });
+
+    it('returns legacy plaintext keys unchanged in memory', async () => {
+        storageGet.mockResolvedValue({ profiles: [
+            { id: '1', apiKey: 'sk-legacy-plaintext' }
+        ]});
+
+        const result = await loadProfiles();
+        expect(result[0].apiKey).toBe('sk-legacy-plaintext');
+    });
+
+    it('re-writes storage with obfuscated keys when legacy keys are present', async () => {
+        storageGet.mockResolvedValue({ profiles: [
+            { id: '1', name: 'A', type: 'openai', model: 'gpt-4', apiKey: 'sk-legacy' }
+        ]});
+
+        await loadProfiles();
+
+        expect(storageSet).toHaveBeenCalledTimes(1);
+        const migrated = storageSet.mock.calls[0][0].profiles;
+        expect(isObfuscatedKey(migrated[0].apiKey)).toBe(true);
+        // The re-written key must decode back to the original plaintext.
+        expect(deobfuscateApiKey(migrated[0].apiKey)).toBe('sk-legacy');
+    });
+
+    it('does not re-write storage when all keys are already obfuscated', async () => {
+        storageGet.mockResolvedValue({ profiles: [
+            { id: '1', apiKey: obfuscateApiKey('sk-ok') }
+        ]});
+
+        await loadProfiles();
+        expect(storageSet).not.toHaveBeenCalled();
+    });
+
+    it('does not re-write storage when all keys are null', async () => {
+        storageGet.mockResolvedValue({ profiles: [
+            { id: '1', apiKey: null },
+            { id: '2', apiKey: undefined }
+        ]});
+
+        await loadProfiles();
+        expect(storageSet).not.toHaveBeenCalled();
+    });
+
+    it('migrates a mixed set and leaves already-obfuscated keys intact', async () => {
+        const obfuscated = obfuscateApiKey('sk-already');
+        storageGet.mockResolvedValue({ profiles: [
+            { id: '1', apiKey: 'sk-legacy' },
+            { id: '2', apiKey: obfuscated },
+            { id: '3', apiKey: null }
+        ]});
+
+        const result = await loadProfiles();
+        expect(result[0].apiKey).toBe('sk-legacy');
+        expect(result[1].apiKey).toBe('sk-already');
+        expect(result[2].apiKey).toBeNull();
+
+        const migrated = storageSet.mock.calls[0][0].profiles;
+        expect(isObfuscatedKey(migrated[0].apiKey)).toBe(true);
+        expect(migrated[1].apiKey).toBe(obfuscated);
+        expect(migrated[2].apiKey).toBeNull();
     });
 });

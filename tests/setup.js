@@ -31,6 +31,7 @@ global.browser = {
         onInstalled: { addListener: vi.fn() },
         onStartup: { addListener: vi.fn() },
         onMessage: { addListener: vi.fn() },
+        sendMessage: vi.fn().mockResolvedValue(undefined),
     },
     tabs: {
         sendMessage: vi.fn().mockResolvedValue(undefined),

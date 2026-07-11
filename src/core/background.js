@@ -2,6 +2,7 @@
 // Provider logic is delegated to the provider abstraction in ./providers/.
 // See ARCHITECTURE_REVIEW.md item 1 for the rationale behind this design.
 import { getProvider, getDefaultEndpoint } from './providers/provider-registry.js';
+import { loadProfiles } from '../utils/storage-utils.js';
 
 class BackgroundManager {
     constructor() {
@@ -100,8 +101,11 @@ class BackgroundManager {
 
     async handleGetProfiles(sendResponse) {
         try {
-            const result = await browser.storage.local.get('profiles');
-            sendResponse({ profiles: result.profiles || [] });
+            // loadProfiles deobfuscates API keys (and migrates any legacy
+            // plaintext keys) so the popup and content script receive usable
+            // plaintext keys to pass back with processWithLLM requests.
+            const profiles = await loadProfiles();
+            sendResponse({ profiles, error: null });
         } catch (error) {
             console.error('Error getting profiles:', error);
             sendResponse({ profiles: [], error: error.message });

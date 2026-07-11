@@ -6,12 +6,10 @@ import Sortable from 'sortablejs';
 import { applyTheme, loadProfiles, saveProfiles, getThemeSetting, saveThemeSetting, handleThemeChange, getThemeDisplayName, getExtensionInfo, generateId, clearElement } from '../../utils/utils.js';
 import { getProfileIcon, getProfileModelText } from '../../utils/profile-ui-utils.js';
 import { validateProfile } from '../../utils/storage-utils.js';
+import { xorEncode, xorDecode } from '../../utils/crypto-utils.js';
 
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
-
-// Static encryption key (just to protect the api keys in the exported file)
-const ENCRYPTION_KEY = 'Afo1ne7oot8Cemaicie7yeish8weiBie';
 
 class SettingsManager {
     constructor() {
@@ -360,31 +358,6 @@ class SettingsManager {
         }
     }
 
-    // Simple XOR encryption/decryption
-    encryptApiKey(apiKey) {
-        if (!apiKey) return apiKey;
-        let encrypted = '';
-        for (let i = 0; i < apiKey.length; i++) {
-            encrypted += String.fromCharCode(apiKey.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length));
-        }
-        return btoa(encrypted); // Base64 encode
-    }
-
-    decryptApiKey(encryptedApiKey) {
-        if (!encryptedApiKey) return encryptedApiKey;
-        try {
-            const encrypted = atob(encryptedApiKey); // Base64 decode
-            let decrypted = '';
-            for (let i = 0; i < encrypted.length; i++) {
-                decrypted += String.fromCharCode(encrypted.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length));
-            }
-            return decrypted;
-        } catch (error) {
-            console.warn('Failed to decrypt API key:', error);
-            return encryptedApiKey; // Return as-is if decryption fails
-        }
-    }
-
     // Export profiles to JSON file
     async exportProfiles() {
         // Reload profiles from storage to get the latest changes
@@ -395,10 +368,12 @@ class SettingsManager {
             return;
         }
 
-        // Create a copy of profiles with encrypted API keys
+        // Create a copy of profiles with obfuscated API keys. xorEncode is the
+        // raw (prefix-less) format so exported files stay compatible with
+        // older imports.
         const exportProfiles = this.profiles.map(profile => ({
             ...profile,
-            apiKey: this.encryptApiKey(profile.apiKey)
+            apiKey: profile.apiKey ? xorEncode(profile.apiKey) : profile.apiKey
         }));
 
         const dataStr = JSON.stringify(exportProfiles, null, 2);
@@ -457,10 +432,12 @@ class SettingsManager {
                 return;
             }
 
-            // Decrypt API keys in imported profiles
+            // Decode obfuscated API keys in imported profiles. xorDecode
+            // returns the value unchanged when it isn't a valid encoded string,
+            // so older exports and plain-text keys degrade gracefully.
             const decryptedProfiles = importedProfiles.map(profile => ({
                 ...profile,
-                apiKey: this.decryptApiKey(profile.apiKey)
+                apiKey: profile.apiKey ? xorDecode(profile.apiKey) : profile.apiKey
             }));
 
             // Replace profiles

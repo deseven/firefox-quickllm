@@ -1,7 +1,7 @@
 // Profile editing page functionality
 import './profile-edit.css';
 import { PROMPT_TEMPLATES } from '../../utils/prompt-templates.js';
-import { applyTheme, escapeHtml, generateId, clearElement, getStorageData, setStorageData, sendRuntimeMessage } from '../../utils/utils.js';
+import { applyTheme, escapeHtml, generateId, clearElement, loadProfiles, saveProfiles } from '../../utils/utils.js';
 import { PROVIDER_METADATA, getProviderTypeList } from '../../core/providers/provider-types.js';
 
 class ProfileEditor {
@@ -185,8 +185,9 @@ class ProfileEditor {
         this.showLoading(true);
         
         try {
-            const result = await getStorageData('profiles');
-            const profiles = result.profiles || [];
+            // loadProfiles deobfuscates API keys so the form shows the
+            // plaintext key the user originally entered.
+            const profiles = await loadProfiles();
             const profile = profiles.find(p => p.id === profileId);
             
             if (profile) {
@@ -279,8 +280,9 @@ class ProfileEditor {
         this.showLoading(true);
 
         try {
-            const result = await getStorageData('profiles');
-            let profiles = result.profiles || [];
+            // loadProfiles returns plaintext keys; saveProfiles obfuscates
+            // them before they reach storage, so the raw key never persists.
+            let profiles = await loadProfiles();
             
             let isEdit = false;
             if (this.profileId) {
@@ -296,10 +298,9 @@ class ProfileEditor {
                 profiles.push(profileData);
             }
 
-            await setStorageData({ profiles: profiles });
-            
-            // Notify background script to update context menus
-            await sendRuntimeMessage({ type: 'profilesUpdated' });
+            // saveProfiles obfuscates API keys and notifies the background
+            // script to refresh context menus.
+            await saveProfiles(profiles);
             
             // Go back to main page with appropriate notification
             this.goBack(isEdit);

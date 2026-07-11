@@ -54,6 +54,19 @@ export {
 export { default as diffRenderer } from './diff-renderer.js';
 export { DiffRenderer } from './diff-renderer.js';
 
+// Crypto utilities (API key obfuscation for storage + export)
+export {
+    OBFUSCATION_PREFIX,
+    xorEncode,
+    xorDecode,
+    obfuscateApiKey,
+    deobfuscateApiKey,
+    isObfuscatedKey,
+    obfuscateProfileApiKeys,
+    deobfuscateProfileApiKeys,
+    profilesNeedMigration
+} from './crypto-utils.js';
+
 /**
  * Get default endpoint for profile types that have one.
  * Delegates to the central provider-types registry so the default endpoints
