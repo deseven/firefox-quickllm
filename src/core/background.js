@@ -1,8 +1,7 @@
-// Background script for QuickLLM extension using official SDKs
-import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
-import { Ollama } from 'ollama/browser';
-import { getDefaultEndpoint } from '../utils/utils.js';
+// Background script for QuickLLM extension.
+// Provider logic is delegated to the provider abstraction in ./providers/.
+// See ARCHITECTURE_REVIEW.md item 1 for the rationale behind this design.
+import { getProvider, getDefaultEndpoint } from './providers/provider-registry.js';
 
 class BackgroundManager {
     constructor() {
@@ -145,248 +144,46 @@ class BackgroundManager {
 
     async processWithLLM(profile, userPrompt, text, isStreaming, tabId, streamId) {
         const { type, apiKey, endpoint, model, extraOptions, systemPrompt } = profile;
-        
+
+        // Look up the provider for this profile type
+        const provider = getProvider(type);
+        if (!provider) {
+            throw new Error('Unsupported profile type');
+        }
+
         // Create stream controller for cancellation
         const streamController = { cancelled: false };
         if (isStreaming && streamId) {
             this.activeStreams.set(streamId, streamController);
         }
-        
+
         try {
             // Get the effective endpoint (use default if not specified)
             const effectiveEndpoint = endpoint || getDefaultEndpoint(type);
-            
-            if (type === 'openai' || type === 'openrouter' || type === 'together' || type === 'deepseek') {
-                return await this.processWithOpenAI(apiKey, effectiveEndpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController);
-            } else if (type === 'anthropic') {
-                return await this.processWithAnthropic(apiKey, effectiveEndpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController);
-            } else if (type === 'ollama') {
-                return await this.processWithOllama(apiKey, effectiveEndpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController);
-            } else {
-                throw new Error('Unsupported profile type');
-            }
+
+            // Build the context object passed to the provider
+            const context = {
+                apiKey,
+                endpoint: effectiveEndpoint,
+                model,
+                systemPrompt,
+                userPrompt,
+                text,
+                extraOptions,
+                isStreaming,
+                tabId,
+                streamId,
+                streamController
+            };
+
+            // Delegate to the provider — streaming loop, cancellation, and
+            // streamUpdate messaging all live in the base class.
+            return await provider.process(context);
         } finally {
             // Clean up stream controller
             if (streamId && this.activeStreams.has(streamId)) {
                 this.activeStreams.delete(streamId);
             }
-        }
-    }
-
-    // Helper function to merge extra options with base options
-    mergeExtraOptions(baseOptions, extraOptions) {
-        if (!extraOptions) {
-            return baseOptions;
-        }
-        
-        let parsedExtraOptions = {};
-        try {
-            parsedExtraOptions = JSON.parse(extraOptions);
-        } catch (error) {
-            console.warn('Invalid extra options JSON, ignoring:', error);
-            return baseOptions;
-        }
-        
-        // Merge options, but don't overwrite critical fields like model
-        const merged = { ...parsedExtraOptions, ...baseOptions };
-        return merged;
-    }
-
-    async processWithOpenAI(apiKey, endpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController) {
-        const openai = new OpenAI({
-            apiKey: apiKey || 'dummy-key', // Some APIs don't require keys but OpenAI SDK requires a value
-            baseURL: endpoint || undefined,
-            dangerouslyAllowBrowser: true
-        });
-        
-        const messages = [];
-        
-        // System prompt
-        if (systemPrompt) {
-            messages.push({ role: 'system', content: systemPrompt });
-        }
-        
-        // User prompt (if defined)
-        if (userPrompt) {
-            messages.push({ role: 'user', content: userPrompt });
-        }
-        
-        // Text to process becomes user message
-        messages.push({ role: 'user', content: text });
-
-        // Base options that should not be overwritten
-        const baseOptions = {
-            model: model,
-            messages: messages
-        };
-
-        if (isStreaming) {
-            const streamOptions = this.mergeExtraOptions({ ...baseOptions, stream: true }, extraOptions);
-            
-            // Check if cancelled before making request
-            if (streamController && streamController.cancelled) {
-                throw new Error('Request cancelled');
-            }
-            
-            const stream = await openai.chat.completions.create(streamOptions);
-
-            let fullResponse = '';
-            for await (const chunk of stream) {
-                // Check if cancelled during streaming
-                if (streamController && streamController.cancelled) {
-                    break;
-                }
-                
-                const content = chunk.choices[0]?.delta?.content || '';
-                if (content) {
-                    fullResponse += content;
-                    // Send update to content script with streamId
-                    browser.tabs.sendMessage(tabId, {
-                        type: 'streamUpdate',
-                        content: fullResponse,
-                        streamId: streamId
-                    });
-                }
-            }
-            return fullResponse;
-        } else {
-            // Check if cancelled before making request
-            if (streamController && streamController.cancelled) {
-                throw new Error('Request cancelled');
-            }
-            
-            const completionOptions = this.mergeExtraOptions(baseOptions, extraOptions);
-            const completion = await openai.chat.completions.create(completionOptions);
-            return completion.choices[0].message.content;
-        }
-    }
-
-    async processWithAnthropic(apiKey, endpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController) {
-        const anthropic = new Anthropic({
-            apiKey: apiKey || 'dummy-key', // Some APIs don't require keys but Anthropic SDK requires a value
-            baseURL: endpoint || undefined,
-            dangerouslyAllowBrowser: true
-        });
-        
-        const messages = [];
-        
-        // User prompt (if defined)
-        if (userPrompt) {
-            messages.push({ role: 'user', content: userPrompt });
-        }
-        
-        // Text to process becomes user message
-        messages.push({ role: 'user', content: text });
-
-        const baseOptions = {
-            model: model,
-            messages: messages,
-            max_tokens: 4096  // Required by Anthropic API
-        };
-
-        // System prompt
-        if (systemPrompt) {
-            baseOptions.system = systemPrompt;
-        }
-
-        if (isStreaming) {
-            // Check if cancelled before making request
-            if (streamController && streamController.cancelled) {
-                throw new Error('Request cancelled');
-            }
-            
-            const streamOptions = this.mergeExtraOptions({ ...baseOptions, stream: true }, extraOptions);
-            const stream = await anthropic.messages.create(streamOptions);
-
-            let fullResponse = '';
-            for await (const chunk of stream) {
-                // Check if cancelled during streaming
-                if (streamController && streamController.cancelled) {
-                    break;
-                }
-                
-                if (chunk.type === 'content_block_delta') {
-                    const content = chunk.delta.text || '';
-                    if (content) {
-                        fullResponse += content;
-                        // Send update to content script with streamId
-                        browser.tabs.sendMessage(tabId, {
-                            type: 'streamUpdate',
-                            content: fullResponse,
-                            streamId: streamId
-                        });
-                    }
-                }
-            }
-            return fullResponse;
-        } else {
-            // Check if cancelled before making request
-            if (streamController && streamController.cancelled) {
-                throw new Error('Request cancelled');
-            }
-            
-            const requestOptions = this.mergeExtraOptions(baseOptions, extraOptions);
-            const message = await anthropic.messages.create(requestOptions);
-            return message.content[0].text;
-        }
-    }
-
-    async processWithOllama(apiKey, endpoint, model, systemPrompt, userPrompt, text, isStreaming, tabId, extraOptions, streamId, streamController) {
-        const ollama = new Ollama({
-            host: endpoint || 'http://localhost:11434'
-        });
-        
-        // Build the prompt with system prompt and user prompt if provided
-        let prompt = '';
-        if (systemPrompt) {
-            prompt += systemPrompt + '\n\n';
-        }
-        if (userPrompt) {
-            prompt += userPrompt + '\n\n';
-        }
-        prompt += text;
-
-        const baseOptions = {
-            model: model,
-            prompt: prompt
-        };
-
-        if (isStreaming) {
-            // Check if cancelled before making request
-            if (streamController && streamController.cancelled) {
-                throw new Error('Request cancelled');
-            }
-            
-            const streamOptions = this.mergeExtraOptions({ ...baseOptions, stream: true }, extraOptions);
-            const stream = await ollama.generate(streamOptions);
-
-            let fullResponse = '';
-            for await (const chunk of stream) {
-                // Check if cancelled during streaming
-                if (streamController && streamController.cancelled) {
-                    break;
-                }
-                
-                if (chunk.response) {
-                    fullResponse += chunk.response;
-                    // Send update to content script with streamId
-                    browser.tabs.sendMessage(tabId, {
-                        type: 'streamUpdate',
-                        content: fullResponse,
-                        streamId: streamId
-                    });
-                }
-            }
-            return fullResponse;
-        } else {
-            // Check if cancelled before making request
-            if (streamController && streamController.cancelled) {
-                throw new Error('Request cancelled');
-            }
-            
-            const generateOptions = this.mergeExtraOptions(baseOptions, extraOptions);
-            const response = await ollama.generate(generateOptions);
-            return response.response;
         }
     }
 

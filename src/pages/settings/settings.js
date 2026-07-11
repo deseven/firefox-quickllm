@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import * as bootstrap from 'bootstrap';
 import Sortable from 'sortablejs';
 import { applyTheme, loadProfiles, saveProfiles, getThemeSetting, saveThemeSetting, handleThemeChange, getThemeDisplayName, getExtensionInfo, generateId, clearElement, formatEndpointForDisplay, getDefaultEndpoint } from '../../utils/utils.js';
+import { getProviderIcon } from '../../core/providers/provider-types.js';
 
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
@@ -192,22 +193,9 @@ class SettingsManager {
     }
 
     getProfileIcon(profile) {
-        const type = profile.type;
-        const endpoint = profile.endpoint;
-
-        if (type === 'deepseek') {
-            return 'bxl bx-deepseek';
-        }
-
-        if (type === 'openrouter' || type === 'together') {
-            return 'bx bx-brain-circuit';
-        }
-
-        if (type === 'openai' && endpoint) {
-            return 'bx bx-brain-circuit';
-        }
-
-        return `bxl bx-${type}`;
+        // Delegate to the central provider-types registry so icon logic
+        // is defined in a single place.
+        return getProviderIcon(profile.type, profile.endpoint);
     }
 
     shouldDisplayEndpoint(profile) {

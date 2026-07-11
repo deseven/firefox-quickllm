@@ -3,6 +3,7 @@ import './extension.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as bootstrap from 'bootstrap';
 import { applyTheme, loadProfiles, clearElement, formatEndpointForDisplay, getDefaultEndpoint } from '../../utils/utils.js';
+import { getProviderIcon } from '../../core/providers/provider-types.js';
 
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
@@ -61,28 +62,9 @@ class ProfileManager {
     }
 
     getProfileIcon(profile) {
-        // Determine the correct icon based on profile type and endpoint
-        const type = profile.type;
-        const endpoint = profile.endpoint;
-
-        // DeepSeek uses its own icon
-        if (type === 'deepseek') {
-            return 'bxl bx-deepseek';
-        }
-
-        // OpenRouter and Together.ai use brain-circuit icon
-        if (type === 'openrouter' || type === 'together') {
-            return 'bx bx-brain-circuit';
-        }
-
-        // OpenAI with custom endpoint uses brain-circuit icon
-        // (only if endpoint is set, since openrouter/together/deepseek have default endpoints)
-        if (type === 'openai' && endpoint) {
-            return 'bx bx-brain-circuit';
-        }
-
-        // Default: use the type name as icon (openai, anthropic, ollama)
-        return `bxl bx-${type}`;
+        // Delegate to the central provider-types registry so icon logic
+        // is defined in a single place.
+        return getProviderIcon(profile.type, profile.endpoint);
     }
 
     shouldDisplayEndpoint(profile) {

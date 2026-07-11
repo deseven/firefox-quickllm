@@ -74,15 +74,10 @@ export function generateId() {
 }
 
 /**
- * Get default endpoint for profile types that have one
+ * Get default endpoint for profile types that have one.
+ * Delegates to the central provider-types registry so the default endpoints
+ * are defined in a single place.
  * @param {string} type - Profile type (openrouter, together, deepseek, etc.)
  * @returns {string|null} Default endpoint URL or null if no default exists
  */
-export function getDefaultEndpoint(type) {
-    const defaultEndpoints = {
-        'openrouter': 'https://openrouter.ai/api/v1',
-        'together': 'https://api.together.xyz/v1',
-        'deepseek': 'https://api.deepseek.com/v1'
-    };
-    return defaultEndpoints[type] || null;
-}
+export { getDefaultEndpoint } from '../core/providers/provider-types.js';

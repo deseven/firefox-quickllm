@@ -7,7 +7,8 @@
     "build": "node esbuild.config.js",
     "dev": "node esbuild.config.js --watch",
     "pack": "npm run build && web-ext build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -33,6 +34,7 @@
     "stream-browserify": "^3.0.0",
     "url": "^0.11.4",
     "util": "^0.12.5",
+    "vitest": "^4.1.10",
     "web-ext": "^10.5.0"
   }
 }

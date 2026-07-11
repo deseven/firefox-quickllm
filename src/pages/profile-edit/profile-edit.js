@@ -2,6 +2,7 @@
 import './profile-edit.css';
 import { PROMPT_TEMPLATES } from '../../utils/prompt-templates.js';
 import { applyTheme, escapeHtml, generateId, clearElement, getStorageData, setStorageData, sendRuntimeMessage } from '../../utils/utils.js';
+import { PROVIDER_METADATA, getProviderTypeList } from '../../core/providers/provider-types.js';
 
 class ProfileEditor {
     constructor() {
@@ -15,7 +16,30 @@ class ProfileEditor {
         this.setupEventListeners();
         this.setupPromptTemplateDropdown();
         this.setupModeSwitch();
+        this.populateProviderTypes();
         await this.loadProfileFromUrl();
+    }
+
+    /**
+     * Populate the profile type dropdown from the central provider registry.
+     * This keeps the dropdown in sync with the supported providers without
+     * duplicating the list in HTML.
+     */
+    populateProviderTypes() {
+        const select = document.getElementById('profileType');
+        // Preserve the placeholder option
+        const placeholder = select.querySelector('option[value=""]');
+        clearElement(select);
+        if (placeholder) {
+            select.appendChild(placeholder);
+        }
+        for (const type of getProviderTypeList()) {
+            const meta = PROVIDER_METADATA[type];
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = meta ? meta.label : type;
+            select.appendChild(option);
+        }
     }
 
     setupEventListeners() {
