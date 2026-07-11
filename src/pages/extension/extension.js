@@ -4,6 +4,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import * as bootstrap from 'bootstrap';
 import { applyTheme, loadProfiles, clearElement } from '../../utils/utils.js';
 import { getProfileIcon, getProfileModelText } from '../../utils/profile-ui-utils.js';
+import { createProcessContentMessage } from '../../core/messages.js';
 
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
@@ -112,10 +113,7 @@ class ProfileManager {
         try {
             const tabs = await browser.tabs.query({ active: true, currentWindow: true });
             if (tabs[0]) {
-                await browser.tabs.sendMessage(tabs[0].id, {
-                    type: 'processContent',
-                    profileId: profile.id
-                });
+                await browser.tabs.sendMessage(tabs[0].id, createProcessContentMessage(profile.id));
                 // Close the popup after triggering
                 window.close();
             }

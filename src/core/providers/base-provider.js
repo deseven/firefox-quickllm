@@ -4,6 +4,8 @@
 // messaging to the content script — eliminating the duplication that previously
 // existed across processWithOpenAI, processWithAnthropic, and processWithOllama.
 
+import { createStreamUpdateMessage, PROTECTED_REQUEST_FIELDS } from '../messages.js';
+
 /**
  * @typedef {Object} ProviderContext
  * @property {string} apiKey
@@ -94,7 +96,9 @@ export class BaseProvider {
             return baseOptions;
         }
 
-        // Merge options, but don't overwrite critical fields like model
+        // Merge options, but don't overwrite critical fields. The base options
+        // are spread last so they win over any user-supplied values for the
+        // protected fields (model, messages, stream).
         return { ...parsedExtraOptions, ...baseOptions };
     }
 
@@ -146,11 +150,7 @@ export class BaseProvider {
             if (content) {
                 fullResponse += content;
                 // Send update to content script with streamId
-                browser.tabs.sendMessage(tabId, {
-                    type: 'streamUpdate',
-                    content: fullResponse,
-                    streamId: streamId
-                });
+                browser.tabs.sendMessage(tabId, createStreamUpdateMessage(fullResponse, streamId));
             }
         }
         return fullResponse;

@@ -2,6 +2,13 @@
 import { escapeHtml, prefersDarkMode, createElement, clearElement, renderMarkdownToElement, createLoadingElement, showErrorState, diffRenderer } from '../utils/utils.js';
 import ShadowModal from '../utils/shadow-modal.js';
 import TurndownService from 'turndown';
+import {
+    MESSAGE_TYPES,
+    createGetProfilesMessage,
+    createProcessWithLLMMessage,
+    createCancelStreamMessage,
+    validateMessage
+} from '../core/messages.js';
 
 class ContentManager {
     constructor() {
@@ -19,17 +26,25 @@ class ContentManager {
 
     setupMessageHandlers() {
         browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            switch (message.type) {
-                case 'processContent':
-                    this.handleProcessContent(message.profileId);
-                    break;
+            // Validate the message shape before dispatching.
+            const { valid, error } = validateMessage(message);
+            if (!valid) {
+                console.warn('Rejecting invalid message:', error);
+                return false;
+            }
 
-                case 'streamUpdate':
+            switch (message.type) {
+                case MESSAGE_TYPES.PROCESS_CONTENT:
+                    this.handleProcessContent(message.profileId);
+                    return false; // Synchronous, no response payload
+
+                case MESSAGE_TYPES.STREAM_UPDATE:
                     this.updateStreamingResponse(message.content, message.streamId);
-                    break;
+                    return false; // Synchronous, no response payload
 
                 default:
                     console.log('Unknown message type:', message.type);
+                    return false;
             }
         });
     }
@@ -136,7 +151,7 @@ class ContentManager {
 
     async showPromptModal(text, textType, selectedProfile = null, bypassProcessImmediately = false, profileId = null) {
         // Get profiles
-        const profilesResponse = await browser.runtime.sendMessage({ type: 'getProfiles' });
+        const profilesResponse = await browser.runtime.sendMessage(createGetProfilesMessage());
         const profiles = profilesResponse.profiles || [];
         
         if (profiles.length === 0) {
@@ -678,14 +693,9 @@ class ContentManager {
 
         try {
             // Send system prompt, user prompt, and text as separate messages
-            const response = await browser.runtime.sendMessage({
-                type: 'processWithLLM',
-                profile: profile,
-                userPrompt: userPrompt,
-                text: text,
-                isStreaming: true,
-                streamId: streamId
-            });
+            const response = await browser.runtime.sendMessage(
+                createProcessWithLLMMessage(profile, userPrompt, text, true, streamId)
+            );
 
             if (response.success) {
                 // Only process if this is still the current stream
@@ -906,12 +916,10 @@ class ContentManager {
         if (this.currentModal) {
             // Cancel any active stream
             if (this.currentStreamId) {
-                browser.runtime.sendMessage({
-                    type: 'cancelStream',
-                    streamId: this.currentStreamId
-                }).catch(error => {
-                    console.log('Error cancelling stream:', error);
-                });
+                browser.runtime.sendMessage(createCancelStreamMessage(this.currentStreamId))
+                    .catch(error => {
+                        console.log('Error cancelling stream:', error);
+                    });
                 this.currentStreamId = null;
             }
             

@@ -1,8 +1,17 @@
 // Background script for QuickLLM extension.
 // Provider logic is delegated to the provider abstraction in ./providers/.
-// See ARCHITECTURE_REVIEW.md item 1 for the rationale behind this design.
 import { getProvider, getDefaultEndpoint } from './providers/provider-registry.js';
 import { loadProfiles } from '../utils/storage-utils.js';
+import {
+    MESSAGE_TYPES,
+    createProcessContentMessage,
+    createGetProfilesResponse,
+    createLLMSuccessResponse,
+    createLLMErrorResponse,
+    createCancelStreamSuccessResponse,
+    createCancelStreamErrorResponse,
+    validateMessage
+} from './messages.js';
 
 class BackgroundManager {
     constructor() {
@@ -51,29 +60,38 @@ class BackgroundManager {
 
     setupMessageHandlers() {
         browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            // Validate the message shape before dispatching. Malformed messages
+            // are logged and ignored rather than crashing the listener.
+            const { valid, error } = validateMessage(message);
+            if (!valid) {
+                console.warn('Rejecting invalid message:', error);
+                return false;
+            }
+
             switch (message.type) {
-                case 'getProfiles':
+                case MESSAGE_TYPES.GET_PROFILES:
                     this.handleGetProfiles(sendResponse);
                     return true; // Keep message channel open for async response
 
-                case 'processWithLLM':
+                case MESSAGE_TYPES.PROCESS_WITH_LLM:
                     this.handleLLMRequest(message, sender, sendResponse);
                     return true; // Keep message channel open for async response
 
-                case 'cancelStream':
+                case MESSAGE_TYPES.CANCEL_STREAM:
                     this.handleCancelStream(message, sender, sendResponse);
-                    break;
+                    return true; // Async-capable: keep channel open for the response
 
-                case 'openPopup':
+                case MESSAGE_TYPES.OPEN_POPUP:
                     this.openPopup();
-                    break;
+                    return false; // Synchronous, no response payload needed
 
-                case 'profilesUpdated':
+                case MESSAGE_TYPES.PROFILES_UPDATED:
                     this.setupContextMenus();
-                    break;
+                    return false; // Fire-and-forget, no response expected
 
                 default:
                     console.log('Unknown message type:', message.type);
+                    return false;
             }
         });
 
@@ -90,9 +108,7 @@ class BackgroundManager {
                 // Get the active tab and send message to content script
                 browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
                     if (tabs[0]) {
-                        browser.tabs.sendMessage(tabs[0].id, {
-                            type: 'processContent'
-                        });
+                        browser.tabs.sendMessage(tabs[0].id, createProcessContentMessage());
                     }
                 });
             }
@@ -105,17 +121,17 @@ class BackgroundManager {
             // plaintext keys) so the popup and content script receive usable
             // plaintext keys to pass back with processWithLLM requests.
             const profiles = await loadProfiles();
-            sendResponse({ profiles, error: null });
+            sendResponse(createGetProfilesResponse(profiles));
         } catch (error) {
             console.error('Error getting profiles:', error);
-            sendResponse({ profiles: [], error: error.message });
+            sendResponse(createGetProfilesResponse([], error.message));
         }
     }
 
     async handleLLMRequest(message, sender, sendResponse) {
         try {
             const { profile, userPrompt, text, isStreaming = false, streamId } = message;
-            
+
             if (!profile) {
                 throw new Error('No profile available');
             }
@@ -125,11 +141,11 @@ class BackgroundManager {
 
             // Process with LLM using streamlined approach
             const response = await this.processWithLLM(profile, userPrompt, text, isStreaming, sender.tab.id, currentStreamId);
-            sendResponse({ success: true, response, streamId: currentStreamId });
+            sendResponse(createLLMSuccessResponse(response, currentStreamId));
 
         } catch (error) {
             console.error('Error processing LLM request:', error);
-            sendResponse({ success: false, error: error.message });
+            sendResponse(createLLMErrorResponse(error.message));
         }
     }
 
@@ -140,9 +156,9 @@ class BackgroundManager {
             streamController.cancelled = true;
             this.activeStreams.delete(streamId);
             console.log(`Stream ${streamId} cancelled`);
-            sendResponse({ success: true });
+            sendResponse(createCancelStreamSuccessResponse());
         } else {
-            sendResponse({ success: false, error: 'Stream not found' });
+            sendResponse(createCancelStreamErrorResponse('Stream not found'));
         }
     }
 
@@ -195,9 +211,7 @@ class BackgroundManager {
         switch (info.menuItemId) {
             case 'quickllm-process':
                 // Let content script determine if there's selected text or use page content
-                browser.tabs.sendMessage(tab.id, {
-                    type: 'processContent'
-                });
+                browser.tabs.sendMessage(tab.id, createProcessContentMessage());
                 break;
         }
     }

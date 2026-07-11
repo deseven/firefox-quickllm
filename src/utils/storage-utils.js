@@ -6,6 +6,7 @@ import {
     deobfuscateProfileApiKeys,
     profilesNeedMigration
 } from './crypto-utils.js';
+import { createProfilesUpdatedMessage } from '../core/messages.js';
 
 /**
  * Get data from browser storage with error handling
@@ -76,7 +77,7 @@ export async function saveProfiles(profiles) {
         const success = await setStorageData({ profiles: storedProfiles });
         if (success) {
             // Notify background script to update context menus
-            await sendRuntimeMessage({ type: 'profilesUpdated' });
+            await sendRuntimeMessage(createProfilesUpdatedMessage());
         }
         return success;
     } catch (error) {
