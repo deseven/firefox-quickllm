@@ -15,32 +15,39 @@ import typescript from 'highlight.js/lib/languages/typescript';
 import json from 'highlight.js/lib/languages/json';
 import xml from 'highlight.js/lib/languages/xml';
 
-// Register the languages with all common aliases
-hljs.registerLanguage('javascript', javascript);
-hljs.registerLanguage('js', javascript);
-hljs.registerLanguage('jsx', javascript);
-hljs.registerLanguage('python', python);
-hljs.registerLanguage('py', python);
-hljs.registerLanguage('bash', bash);
-hljs.registerLanguage('shell', bash);
-hljs.registerLanguage('sh', bash);
-hljs.registerLanguage('zsh', bash);
-hljs.registerLanguage('rust', rust);
-hljs.registerLanguage('rs', rust);
-hljs.registerLanguage('go', go);
-hljs.registerLanguage('golang', go);
-hljs.registerLanguage('java', java);
-hljs.registerLanguage('cpp', cpp);
-hljs.registerLanguage('c++', cpp);
-hljs.registerLanguage('c', cpp);
-hljs.registerLanguage('typescript', typescript);
-hljs.registerLanguage('ts', typescript);
-hljs.registerLanguage('tsx', typescript);
-hljs.registerLanguage('json', json);
-hljs.registerLanguage('xml', xml);
-hljs.registerLanguage('html', xml);
-hljs.registerLanguage('xhtml', xml);
-hljs.registerLanguage('svg', xml);
+// Register the languages with all common aliases.
+// `registerLang` casts the language module to `any` because highlight.js's
+// LanguageFn type and the individual language module return types don't
+// structurally match (extra properties like `unicodeRegex`), which trips
+// TS2345 under checkJs.
+/** @param {string} name @param {any} lang */
+const registerLang = (name, lang) => hljs.registerLanguage(name, lang);
+
+registerLang('javascript', javascript);
+registerLang('js', javascript);
+registerLang('jsx', javascript);
+registerLang('python', python);
+registerLang('py', python);
+registerLang('bash', bash);
+registerLang('shell', bash);
+registerLang('sh', bash);
+registerLang('zsh', bash);
+registerLang('rust', rust);
+registerLang('rs', rust);
+registerLang('go', go);
+registerLang('golang', go);
+registerLang('java', java);
+registerLang('cpp', cpp);
+registerLang('c++', cpp);
+registerLang('c', cpp);
+registerLang('typescript', typescript);
+registerLang('ts', typescript);
+registerLang('tsx', typescript);
+registerLang('json', json);
+registerLang('xml', xml);
+registerLang('html', xml);
+registerLang('xhtml', xml);
+registerLang('svg', xml);
 
 class MarkdownRenderer {
     constructor() {
@@ -66,14 +73,17 @@ class MarkdownRenderer {
         }
 
         try {
-            let html = marked.parse(markdown);
-            
+            // marked.parse() is typed as returning `string | Promise<string>`,
+            // but with the synchronous configuration above it always returns
+            // a string. Cast to string so the post-processing helpers type-check.
+            let html = /** @type {string} */ (marked.parse(markdown));
+
             // Post-process the HTML to add our custom classes
             html = this.postProcessHtml(html);
-            
+
             // Apply syntax highlighting to code blocks
             html = this.applySyntaxHighlighting(html);
-            
+
             return html;
         } catch (error) {
             console.error('Markdown rendering failed:', error);
@@ -116,10 +126,15 @@ class MarkdownRenderer {
      * @returns {string} - The processed HTML
      */
     postProcessHtml(html) {
-        // Add custom classes to elements
-        html = html.replace(/<code>/g, '<code class="inline-code">');
+        // Add custom classes to elements.
+        // Fenced code blocks must be classed before the inline-code pass: the
+        // inline regex matches every bare <code> tag, so if it ran first it
+        // would rewrite <pre><code> into <pre><code class="inline-code"> and
+        // the block-level regexes below would no longer match, leaving block
+        // code with the inline class and no hljs wrapper.
         html = html.replace(/<pre><code class="language-([^"]*)">/g, '<pre class="hljs"><code class="hljs language-$1">');
         html = html.replace(/<pre><code>/g, '<pre class="hljs"><code class="hljs">');
+        html = html.replace(/<code>/g, '<code class="inline-code">');
         html = html.replace(/<table>/g, '<table class="table table-striped table-hover">');
         html = html.replace(/<blockquote>/g, '<blockquote class="blockquote border-start border-primary border-4 ps-3 ms-2">');
         

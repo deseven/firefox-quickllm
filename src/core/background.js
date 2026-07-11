@@ -245,13 +245,13 @@ class BackgroundManager {
 
             // Build the context object passed to the provider
             const context = {
-                apiKey,
+                apiKey: apiKey || '',
                 endpoint: effectiveEndpoint,
                 model,
-                systemPrompt,
+                systemPrompt: systemPrompt || '',
                 userPrompt,
                 text,
-                extraOptions,
+                extraOptions: extraOptions ?? null,
                 isStreaming,
                 tabId,
                 streamId,

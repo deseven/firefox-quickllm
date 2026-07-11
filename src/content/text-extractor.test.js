@@ -57,7 +57,7 @@ describe('cleanMarkdown', () => {
 });
 
 describe('findMainContentElement', () => {
-    function makeDoc(html) {
+    function makeDoc(/** @type {string} */ html) {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         return doc;
     }
@@ -94,7 +94,7 @@ describe('findMainContentElement', () => {
 });
 
 describe('removeUnwantedElements', () => {
-    function makeElement(html) {
+    function makeElement(/** @type {string} */ html) {
         const doc = new DOMParser().parseFromString(html, 'text/html');
         return doc.body;
     }
@@ -167,7 +167,7 @@ describe('getPageText', () => {
         getPageText(doc);
         // The original script element should still be present
         expect(doc.querySelector('script')).not.toBeNull();
-        expect(doc.querySelector('script').textContent).toBe('original');
+        expect(/** @type {HTMLElement} */ (doc.querySelector('script')).textContent).toBe('original');
     });
 });
 

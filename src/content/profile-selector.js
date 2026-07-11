@@ -171,16 +171,17 @@ export async function showProfileSelector(profiles, text, textType, onSelect, on
     const profileItems = modal.querySelectorAll('.quickllm-profile-item');
 
     const updateSelection = () => {
-        profileItems.forEach((/** @type {HTMLElement} */ item, index) => {
+        profileItems.forEach((item, index) => {
+            const el = /** @type {HTMLElement} */ (item);
             if (index === selectedIndex) {
-                item.classList.add('selected');
-                item.scrollIntoView({
+                el.classList.add('selected');
+                el.scrollIntoView({
                     behavior: 'smooth',
                     block: 'nearest',
                     inline: 'nearest'
                 });
             } else {
-                item.classList.remove('selected');
+                el.classList.remove('selected');
             }
         });
     };
@@ -205,27 +206,28 @@ export async function showProfileSelector(profiles, text, textType, onSelect, on
 
     // Click handlers
     profileItems.forEach((item, index) => {
-        item.addEventListener('click', (/** @type {MouseEvent} */ e) => {
+        const el = /** @type {HTMLElement} */ (item);
+        el.addEventListener('click', (e) => {
             selectedIndex = index;
             selectProfile(e.shiftKey);
         });
     });
 
     // Keyboard navigation
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (/** @type {KeyboardEvent} */ e) => {
         const result = resolveProfileSelectorAction(e, selectedIndex, profiles.length);
         if (result.action === null) return;
 
         e.preventDefault();
 
         if (result.action === 'select' || result.action === 'confirm') {
-            selectedIndex = result.index;
+            selectedIndex = result.index ?? 0;
             if (result.action === 'select') {
                 updateSelection();
             }
             selectProfile(result.shiftKey);
         } else if (result.action === 'move') {
-            selectedIndex = result.index;
+            selectedIndex = result.index ?? 0;
             updateSelection();
         } else if (result.action === 'cancel') {
             if (selectionMade) return;

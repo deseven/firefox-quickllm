@@ -51,7 +51,7 @@ export class ModalController {
     }
 
     setupMessageHandlers() {
-        browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        browser.runtime.onMessage.addListener((/** @type {any} */ message, /** @type {any} */ sender, /** @type {any} */ sendResponse) => {
             // Validate the message shape before dispatching.
             const { valid, error } = validateMessage(message);
             if (!valid) {
@@ -98,7 +98,7 @@ export class ModalController {
 
         // If profileId is provided, find that specific profile
         if (profileId) {
-            const selectedProfile = profiles.find(p => p.id === profileId);
+            const selectedProfile = profiles.find((/** @type {Profile} */ p) => p.id === profileId);
             if (!selectedProfile) {
                 await this.showError('Selected profile not found.');
                 return;
@@ -218,7 +218,8 @@ export class ModalController {
             }
         } catch (error) {
             if (this.currentStreamId === streamId) {
-                showErrorState(responseElement, `Error: ${error.message}`);
+                const errMsg = error instanceof Error ? error.message : String(error);
+                showErrorState(responseElement, `Error: ${errMsg}`);
             }
         } finally {
             if (this.currentStreamId === streamId) {
@@ -255,7 +256,7 @@ export class ModalController {
                     requestAnimationFrame(() => {
                         if (this._diffStreamThrottle) {
                             diffRenderer.renderToElement(
-                                this.currentDiffOriginalText,
+                                this.currentDiffOriginalText || '',
                                 this._diffStreamThrottle.content,
                                 responseElement
                             );
@@ -264,7 +265,7 @@ export class ModalController {
                     });
                 }
             } else {
-                diffRenderer.renderToElement(this.currentDiffOriginalText, content, responseElement);
+                diffRenderer.renderToElement(this.currentDiffOriginalText || '', content, responseElement);
             }
         } else {
             renderMarkdownToElement(content, responseElement);
@@ -333,7 +334,7 @@ export class ModalController {
         // Cancel any active stream
         if (this.currentStreamId) {
             browser.runtime.sendMessage(createCancelStreamMessage(this.currentStreamId))
-                .catch(error => {
+                .catch((/** @type {any} */ error) => {
                     console.log('Error cancelling stream:', error);
                 });
             this.currentStreamId = null;

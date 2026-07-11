@@ -7,10 +7,10 @@ if (typeof browser === 'undefined' && typeof chrome !== 'undefined') {
             onMessage: chrome.runtime.onMessage,
             onInstalled: chrome.runtime.onInstalled,
             onStartup: chrome.runtime.onStartup,
-            sendMessage: (message) => {
+            sendMessage: (/** @type {any} */ message) => {
                 return new Promise((resolve, reject) => {
                     try {
-                        chrome.runtime.sendMessage(message, (response) => {
+                        chrome.runtime.sendMessage(message, (/** @type {any} */ response) => {
                             if (chrome.runtime.lastError) {
                                 // Handle common Chrome extension errors more gracefully
                                 const error = chrome.runtime.lastError.message;
@@ -36,9 +36,9 @@ if (typeof browser === 'undefined' && typeof chrome !== 'undefined') {
         },
         storage: {
             local: {
-                get: (keys) => {
-                    return new Promise((resolve, reject) => {
-                        chrome.storage.local.get(keys, (result) => {
+                get: (/** @type {any} */ keys) => {
+                        return new Promise((resolve, reject) => {
+                            chrome.storage.local.get(keys, (/** @type {any} */ result) => {
                             if (chrome.runtime.lastError) {
                                 reject(new Error(chrome.runtime.lastError.message));
                             } else {
@@ -47,17 +47,17 @@ if (typeof browser === 'undefined' && typeof chrome !== 'undefined') {
                         });
                     });
                 },
-                set: (data) => {
-                    return new Promise((resolve, reject) => {
-                        chrome.storage.local.set(data, () => {
-                            if (chrome.runtime.lastError) {
-                                reject(new Error(chrome.runtime.lastError.message));
-                            } else {
-                                resolve();
-                            }
+                set: (/** @type {any} */ data) => {
+                        return new Promise((resolve, reject) => {
+                            chrome.storage.local.set(data, () => {
+                                if (chrome.runtime.lastError) {
+                                    reject(new Error(chrome.runtime.lastError.message));
+                                } else {
+                                    resolve(undefined);
+                                }
+                            });
                         });
-                    });
-                }
+                    }
             }
         },
         contextMenus: chrome.contextMenus ? {
@@ -75,12 +75,12 @@ if (typeof browser === 'undefined' && typeof chrome !== 'undefined') {
             onCommand: { addListener: () => {} }
         },
         tabs: {
-            query: (queryInfo, callback) => {
+            query: (/** @type {any} */ queryInfo, /** @type {any} */ callback) => {
                 if (callback) {
                     chrome.tabs.query(queryInfo, callback);
                 } else {
                     return new Promise((resolve, reject) => {
-                        chrome.tabs.query(queryInfo, (tabs) => {
+                        chrome.tabs.query(queryInfo, (/** @type {any} */ tabs) => {
                             if (chrome.runtime.lastError) {
                                 reject(new Error(chrome.runtime.lastError.message));
                             } else {
@@ -90,13 +90,13 @@ if (typeof browser === 'undefined' && typeof chrome !== 'undefined') {
                     });
                 }
             },
-            sendMessage: (tabId, message, callback) => {
+            sendMessage: (/** @type {any} */ tabId, /** @type {any} */ message, /** @type {any} */ callback) => {
                 if (callback) {
                     chrome.tabs.sendMessage(tabId, message, callback);
                 } else {
                     return new Promise((resolve, reject) => {
                         try {
-                            chrome.tabs.sendMessage(tabId, message, (response) => {
+                            chrome.tabs.sendMessage(tabId, message, (/** @type {any} */ response) => {
                                 if (chrome.runtime.lastError) {
                                     const error = chrome.runtime.lastError.message;
                                     if (error.includes('Receiving end does not exist') ||
@@ -118,9 +118,9 @@ if (typeof browser === 'undefined' && typeof chrome !== 'undefined') {
                     });
                 }
             },
-            create: (createProperties) => {
+            create: (/** @type {any} */ createProperties) => {
                 return new Promise((resolve, reject) => {
-                    chrome.tabs.create(createProperties, (tab) => {
+                    chrome.tabs.create(createProperties, (/** @type {any} */ tab) => {
                         if (chrome.runtime.lastError) {
                             reject(new Error(chrome.runtime.lastError.message));
                         } else {

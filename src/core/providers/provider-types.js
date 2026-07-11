@@ -19,6 +19,7 @@ export const PROVIDER_TYPES = Object.freeze({
 /**
  * Default endpoints for providers that have one.
  * Providers not listed here (e.g. openai, anthropic, ollama) use the SDK default.
+ * @type {Record<string, string>}
  */
 const DEFAULT_ENDPOINTS = {
     [PROVIDER_TYPES.OPENROUTER]: 'https://openrouter.ai/api/v1',
@@ -61,7 +62,7 @@ export function getProviderIcon(type, endpoint) {
     if (type === PROVIDER_TYPES.OPENAI && endpoint) {
         return 'bx bx-brain-circuit';
     }
-    const meta = PROVIDER_METADATA[type];
+    const meta = /** @type {Record<string, { label: string, icon: string }>} */ (PROVIDER_METADATA)[type];
     return meta ? meta.icon : `bxl bx-${type}`;
 }
 

@@ -42,11 +42,11 @@ describe('getProvider', () => {
     });
 
     it('returns null for undefined', () => {
-        expect(getProvider(undefined)).toBeNull();
+        expect(getProvider(/** @type {any} */ (undefined))).toBeNull();
     });
 
     it('returns null for null', () => {
-        expect(getProvider(null)).toBeNull();
+        expect(getProvider(/** @type {any} */ (null))).toBeNull();
     });
 
     it('returns the same singleton instance on repeated calls', () => {
@@ -69,7 +69,7 @@ describe('isSupportedProvider', () => {
     it('returns false for unknown types', () => {
         expect(isSupportedProvider('gemini')).toBe(false);
         expect(isSupportedProvider('')).toBe(false);
-        expect(isSupportedProvider(undefined)).toBe(false);
+        expect(isSupportedProvider(/** @type {any} */ (undefined))).toBe(false);
     });
 });
 

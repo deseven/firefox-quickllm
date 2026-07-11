@@ -103,10 +103,11 @@ describe('getProviderTypeList', () => {
 
 describe('PROVIDER_METADATA', () => {
     it('has metadata for every provider type in the type list', () => {
+        const metadata = /** @type {Record<string, { label: string, icon: string }>} */ (PROVIDER_METADATA);
         for (const type of getProviderTypeList()) {
-            expect(PROVIDER_METADATA[type]).toBeDefined();
-            expect(typeof PROVIDER_METADATA[type].label).toBe('string');
-            expect(typeof PROVIDER_METADATA[type].icon).toBe('string');
+            expect(metadata[type]).toBeDefined();
+            expect(typeof metadata[type].label).toBe('string');
+            expect(typeof metadata[type].icon).toBe('string');
         }
     });
 

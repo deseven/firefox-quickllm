@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import { resolveProfileSelectorAction } from './profile-selector.js';
 
-function makeEvent(key, code, shiftKey = false) {
+function makeEvent(/** @type {string} */ key, /** @type {string} */ code, /** @type {boolean} */ shiftKey = false) {
     return { key, code, shiftKey };
 }
 

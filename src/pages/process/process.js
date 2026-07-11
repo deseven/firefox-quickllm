@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const responseContent = document.getElementById('responseContent');
 
     // Copy response to clipboard using utility function
-    if (copyResponseBtn) {
+    if (copyResponseBtn && responseContent) {
         copyResponseBtn.addEventListener('click', function() {
             const content = responseContent.textContent || responseContent.innerText;
             copyToClipboardWithFeedback(content, copyResponseBtn);
@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Function to update response content (called from extension.js)
+/**
+ * @param {string} content
+ */
 function updateResponseContent(content) {
     const responseContent = document.getElementById('responseContent');
     if (responseContent) {

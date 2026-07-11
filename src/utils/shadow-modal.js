@@ -26,8 +26,8 @@ class ShadowModal {
     /**
      * Create a modal with Shadow DOM isolation
      * @param {Element|Function} content - DOM element or function that creates DOM elements for the modal
-     * @param {Object} options - Modal options
-     * @returns {Object} - Shadow root and modal element references
+     * @param {Object<string, any>} [options] - Modal options
+     * @returns {Promise<Object>} - Shadow root and modal element references
      */
     async create(content, options = {}) {
         const {
@@ -97,6 +97,8 @@ class ShadowModal {
 
     /**
      * Setup close button and escape key handlers
+     * @param {HTMLElement} modalContainer
+     * @param {(() => void)|null} [onClose]
      */
     setupCloseHandlers(modalContainer, onClose) {
         // Close button handler
@@ -109,7 +111,7 @@ class ShadowModal {
         }
 
         // Escape key handler
-        this.keydownHandler = (e) => {
+        this.keydownHandler = (/** @type {KeyboardEvent} */ e) => {
             if (e.key === 'Escape') {
                 e.preventDefault();
                 if (onClose) onClose();
@@ -224,7 +226,7 @@ class ShadowModal {
      * @returns {NodeList} - Found elements
      */
     querySelectorAll(selector) {
-        if (!this.shadowRoot) return [];
+        if (!this.shadowRoot) return /** @type {any} */ ([]);
         return this.shadowRoot.querySelectorAll(selector);
     }
 
@@ -232,7 +234,7 @@ class ShadowModal {
      * Add event listener to an element within the shadow DOM
      * @param {string} selector - CSS selector
      * @param {string} event - Event type
-     * @param {Function} handler - Event handler
+     * @param {EventListener} handler - Event handler
      */
     addEventListener(selector, event, handler) {
         const element = this.querySelector(selector);

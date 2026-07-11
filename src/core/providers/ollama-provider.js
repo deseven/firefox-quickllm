@@ -10,6 +10,8 @@ export class OllamaProvider extends BaseProvider {
     /**
      * Create the Ollama client.
      * Ollama runs locally and typically does not require an API key.
+     * @param {import('./base-provider.js').ProviderContext} context
+     * @returns {any}
      */
     createClient(context) {
         const { endpoint } = context;
@@ -21,6 +23,9 @@ export class OllamaProvider extends BaseProvider {
     /**
      * Build the generate request parameters.
      * Ollama uses a single prompt string that concatenates system/user prompts.
+     * @param {import('./base-provider.js').ProviderContext} context
+     * @param {boolean} isStream
+     * @returns {any}
      */
     buildRequestParams(context, isStream) {
         const { model, systemPrompt, userPrompt, text } = context;
@@ -43,6 +48,9 @@ export class OllamaProvider extends BaseProvider {
 
     /**
      * Ollama uses client.generate() instead of client.chat.completions.create().
+     * @param {any} client
+     * @param {any} params
+     * @returns {Promise<any>}
      */
     async executeRequest(client, params) {
         return await client.generate(params);
@@ -50,6 +58,8 @@ export class OllamaProvider extends BaseProvider {
 
     /**
      * Extract content from a streaming chunk.
+     * @param {any} chunk
+     * @returns {string}
      */
     extractContent(chunk) {
         return chunk.response || '';
@@ -57,6 +67,8 @@ export class OllamaProvider extends BaseProvider {
 
     /**
      * Extract content from a non-streaming response.
+     * @param {any} response
+     * @returns {string}
      */
     extractResponseContent(response) {
         return response.response;

@@ -11,6 +11,7 @@ const QUOT = String.fromCharCode(38) + 'quot;';
 const SQUOT = String.fromCharCode(38) + '#39;';
 
 describe('DiffRenderer.render', () => {
+    /** @type {any} */
     let renderer;
 
     beforeEach(() => {

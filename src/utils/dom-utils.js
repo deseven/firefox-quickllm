@@ -2,12 +2,24 @@
 import markdownRenderer from './markdown-renderer.js';
 
 /**
+ * Options for createElement().
+ * @typedef {Object} CreateElementOptions
+ * @property {string} [className] - CSS class name(s).
+ * @property {string|null} [id] - Element id.
+ * @property {string} [textContent] - Text content.
+ * @property {string|Object<string, string>} [style] - Inline style string or map.
+ * @property {Object<string, string|boolean>} [attributes] - Attribute name/value map.
+ * @property {Array<string|Node>} [children] - Child nodes or text strings.
+ */
+
+/**
  * Escape HTML special characters to prevent XSS attacks.
  * Used when inserting untrusted text into the DOM as raw HTML.
  * @param {string} text - Text to escape
  * @returns {string} Escaped HTML
  */
 export function escapeHtml(text) {
+    /** @type {Record<string, string>} */
     const entityMap = {
         '&': String.fromCharCode(38) + 'amp;',
         '<': String.fromCharCode(38) + 'lt;',
@@ -21,12 +33,12 @@ export function escapeHtml(text) {
 /**
  * Create DOM elements programmatically with options
  * @param {string} tag - HTML tag name
- * @param {Object} options - Element options
+ * @param {CreateElementOptions} [options] - Element options
  * @returns {HTMLElement} Created element
  */
 export function createElement(tag, options = {}) {
     const element = document.createElement(tag);
-    
+
     if (options.className) element.className = options.className;
     if (options.id) element.id = options.id;
     if (options.textContent) element.textContent = options.textContent;
@@ -39,7 +51,7 @@ export function createElement(tag, options = {}) {
     }
     if (options.attributes) {
         Object.entries(options.attributes).forEach(([key, value]) => {
-            element.setAttribute(key, value);
+            element.setAttribute(key, String(value));
         });
     }
     if (options.children) {
@@ -51,7 +63,7 @@ export function createElement(tag, options = {}) {
             }
         });
     }
-    
+
     return element;
 }
 
@@ -153,7 +165,7 @@ export function showLoadingState(element, message = 'Processing...', useBootstra
 /**
  * Create an error element
  * @param {string} message - Error message
- * @param {string} className - CSS class for styling (default: error styling)
+ * @param {string|null} [className] - CSS class for styling (default: error styling)
  * @returns {HTMLElement} Error element
  */
 export function createErrorElement(message, className = null) {
@@ -176,7 +188,7 @@ export function createErrorElement(message, className = null) {
  * Show error state in an element
  * @param {HTMLElement} element - Target element
  * @param {string} message - Error message
- * @param {string} className - CSS class for styling
+ * @param {string|null} [className] - CSS class for styling
  */
 export function showErrorState(element, message, className = null) {
     if (!element) return;
@@ -190,26 +202,38 @@ export function showErrorState(element, message, className = null) {
  * Add event listener with automatic cleanup tracking
  * @param {HTMLElement} element - Element to add listener to
  * @param {string} event - Event type
- * @param {Function} handler - Event handler
- * @param {Array} cleanupArray - Array to track cleanup functions (optional)
+ * @param {(e: Event) => void} handler - Event handler
+ * @param {Array<() => void>|null} [cleanupArray] - Array to track cleanup functions (optional)
  */
 export function addEventListenerWithCleanup(element, event, handler, cleanupArray = null) {
     if (!element) return;
-    
+
     element.addEventListener(event, handler);
-    
+
     const cleanup = () => element.removeEventListener(event, handler);
-    
+
     if (cleanupArray && Array.isArray(cleanupArray)) {
         cleanupArray.push(cleanup);
     }
-    
+
     return cleanup;
 }
 
 /**
+ * Options for createButton().
+ * @typedef {Object} ButtonOptions
+ * @property {string} [text] - Button text.
+ * @property {string} [className] - CSS class name(s).
+ * @property {string|null} [id] - Element id.
+ * @property {string|null} [title] - Title attribute.
+ * @property {boolean} [disabled] - Whether the button is disabled.
+ * @property {string|null} [icon] - Boxicon class for an icon.
+ * @property {((e: Event) => void)|null} [onClick] - Click handler.
+ */
+
+/**
  * Create a button element with common options
- * @param {Object} options - Button options
+ * @param {ButtonOptions} [options] - Button options
  * @returns {HTMLElement} Button element
  */
 export function createButton(options = {}) {
@@ -249,8 +273,21 @@ export function createButton(options = {}) {
 }
 
 /**
+ * Options for createFormGroup().
+ * @typedef {Object} FormGroupOptions
+ * @property {string} [label] - Label text.
+ * @property {string} [inputType] - Input type attribute.
+ * @property {string|null} [inputId] - Input id.
+ * @property {string} [inputClass] - Input CSS class.
+ * @property {string} [inputValue] - Input value.
+ * @property {string} [inputPlaceholder] - Input placeholder.
+ * @property {boolean} [required] - Whether the input is required.
+ * @property {boolean} [readonly] - Whether the input is read-only.
+ */
+
+/**
  * Create a form group with label and input
- * @param {Object} options - Form group options
+ * @param {FormGroupOptions} [options] - Form group options
  * @returns {HTMLElement} Form group element
  */
 export function createFormGroup(options = {}) {
@@ -330,9 +367,9 @@ export function formatEndpointForDisplay(endpoint) {
 /**
  * Copy text to clipboard with visual feedback
  * @param {string} text - Text to copy
- * @param {HTMLElement} button - Button element to show feedback on (optional)
- * @param {string} successText - Text to show on success (default: 'Copied!')
- * @param {number} feedbackDuration - Duration to show feedback in ms (default: 2000)
+ * @param {HTMLElement|null} [button] - Button element to show feedback on (optional)
+ * @param {string} [successText] - Text to show on success (default: 'Copied!')
+ * @param {number} [feedbackDuration] - Duration to show feedback in ms (default: 2000)
  * @returns {Promise<boolean>} Success status
  */
 export async function copyToClipboardWithFeedback(text, button = null, successText = 'Copied!', feedbackDuration = 2000) {

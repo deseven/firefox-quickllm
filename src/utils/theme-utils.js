@@ -56,7 +56,7 @@ export async function applyTheme(targetElement = document.body) {
         }
         
         // Create new listener
-        window._quickllmThemeListener = (e) => {
+        window._quickllmThemeListener = (/** @type {MediaQueryListEvent} */ e) => {
             if (e.matches) {
                 targetElement.classList.add('dark-theme');
             } else {
@@ -109,7 +109,7 @@ export function getThemeDisplayName(theme) {
 /**
  * Get appropriate colors for current theme
  * @param {boolean} isDark - Whether dark theme is active
- * @returns {Object} Color scheme object
+ * @returns {Object<string, string>} Color scheme object
  */
 export function getThemeColors(isDark) {
     if (isDark) {
@@ -143,16 +143,16 @@ export function getThemeColors(isDark) {
  * Apply theme-specific styles to an element
  * @param {HTMLElement} element - Element to style
  * @param {boolean} isDark - Whether dark theme is active
- * @param {Object} styleMap - Map of style properties to apply
+ * @param {Object<string, string>} styleMap - Map of style properties to apply
  */
 export function applyThemeStyles(element, isDark, styleMap) {
     if (!element || !styleMap) return;
-    
+
     const colors = getThemeColors(isDark);
-    
+
     Object.entries(styleMap).forEach(([property, colorKey]) => {
         if (colors[colorKey]) {
-            element.style[property] = colors[colorKey];
+            element.style.setProperty(property, colors[colorKey]);
         }
     });
 }
@@ -190,6 +190,6 @@ export async function initializeTheme(targetElement = document.body) {
 export function cleanupThemeListeners() {
     if (window._quickllmThemeListener) {
         window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', window._quickllmThemeListener);
-        delete window._quickllmThemeListener;
+        window._quickllmThemeListener = null;
     }
 }

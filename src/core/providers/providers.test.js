@@ -263,6 +263,9 @@ describe('Provider SDK method dispatch', () => {
     }
 
     // Helper: create a mock streaming client that yields given chunks
+    /**
+     * @param {any[]} chunks
+     */
     function makeMockStreamingClient(chunks) {
         const createSpy = vi.fn().mockResolvedValue({
             async *[Symbol.asyncIterator]() {

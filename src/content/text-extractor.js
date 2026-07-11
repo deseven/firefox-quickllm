@@ -42,16 +42,19 @@ export const DIFF_THROTTLE_THRESHOLD = 10000;
 /**
  * Lazily-created Turndown service instance. Configured once and reused
  * across calls to avoid re-initializing the rule set on every extraction.
- * @type {TurndownService|null}
+ * @type {any|null}
  */
 let turndownService = null;
 
 /**
  * Create and configure the Turndown service.
- * @returns {TurndownService}
+ * @returns {any}
  */
 function createTurndownService() {
-    const service = new TurndownService({
+    // Cast to `any` because the turndown package's type definitions report
+    // addRule()/turndown() as "not callable" (TS2349) under the current
+    // jsconfig (no esModuleInterop), since turndown uses a CommonJS `export =`.
+    const service = /** @type {any} */ (new TurndownService({
         headingStyle: 'atx',
         bulletListMarker: '-',
         codeBlockStyle: 'fenced',
@@ -59,11 +62,11 @@ function createTurndownService() {
         emDelimiter: '*',
         strongDelimiter: '**',
         linkStyle: 'inlined'
-    });
+    }));
 
     // Remove media elements completely — they add noise to the prompt.
     service.addRule('removeMedia', {
-        filter: function (node) {
+        filter: function (/** @type {Node} */ node) {
             return node.nodeName === 'IMG' ||
                    node.nodeName === 'VIDEO' ||
                    node.nodeName === 'AUDIO' ||
@@ -79,7 +82,7 @@ function createTurndownService() {
 
 /**
  * Get the shared Turndown service instance, creating it on first use.
- * @returns {TurndownService}
+ * @returns {any}
  */
 function getTurndownService() {
     if (!turndownService) {
@@ -101,7 +104,7 @@ export function _resetTurndownService() {
  */
 export function getSelectedText() {
     const selection = window.getSelection();
-    return selection.toString().trim();
+    return selection ? selection.toString().trim() : '';
 }
 
 /**

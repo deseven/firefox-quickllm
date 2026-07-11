@@ -173,7 +173,7 @@ class SettingsManager {
             ghostClass: 'sortable-ghost',
             dragClass: 'sortable-drag',
             handle: '.drag-handle',
-            onEnd: (evt) => {
+            onEnd: (/** @type {any} */ evt) => {
                 // Reorder profiles array
                 const oldIndex = evt.oldIndex ?? 0;
                 const newIndex = evt.newIndex ?? 0;

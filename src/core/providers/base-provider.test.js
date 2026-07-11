@@ -6,6 +6,10 @@ import { BaseProvider } from './base-provider.js';
 // A concrete test subclass that lets us control the chunks emitted and
 // the content extracted from each chunk.
 class TestProvider extends BaseProvider {
+    /**
+     * @param {any[]} [chunks]
+     * @param {string} [responseContent]
+     */
     constructor(chunks = [], responseContent = 'final-response') {
         super();
         this._chunks = chunks;
@@ -13,20 +17,30 @@ class TestProvider extends BaseProvider {
         this.createClient = vi.fn(() => ({ mock: true }));
     }
 
+    /**
+     * @param {any} context
+     * @param {boolean} isStream
+     */
     buildRequestParams(context, isStream) {
         return { model: context.model, messages: [{ role: 'user', content: context.text }] };
     }
 
+    /** @param {any} chunk */
     extractContent(chunk) {
         return chunk.text || '';
     }
 
+    /** @param {any} response */
     extractResponseContent(response) {
         return this._responseContent;
     }
 
     // Override executeRequest to return a fake async iterable for streaming,
     // or a fake response object for non-streaming.
+    /**
+     * @param {any} client
+     * @param {any} params
+     */
     async executeRequest(client, params) {
         if (params.stream) {
             const chunks = this._chunks;
@@ -246,12 +260,12 @@ describe('BaseProvider.process (streaming)', () => {
 describe('BaseProvider abstract methods', () => {
     it('throws when createClient is not overridden', () => {
         const provider = new BaseProvider();
-        expect(() => provider.createClient({})).toThrow('createClient() must be implemented by subclass');
+        expect(() => provider.createClient(/** @type {any} */ ({}))).toThrow('createClient() must be implemented by subclass');
     });
 
     it('throws when buildRequestParams is not overridden', () => {
         const provider = new BaseProvider();
-        expect(() => provider.buildRequestParams({})).toThrow('buildRequestParams() must be implemented by subclass');
+        expect(() => provider.buildRequestParams(/** @type {any} */ ({}), false)).toThrow('buildRequestParams() must be implemented by subclass');
     });
 
     it('throws when extractContent is not overridden', () => {

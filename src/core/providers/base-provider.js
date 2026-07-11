@@ -26,7 +26,7 @@ export class BaseProvider {
      * Create the SDK client instance.
      * Must be implemented by subclasses.
      * @param {ProviderContext} context
-     * @returns {Object} SDK client
+     * @returns {any} SDK client
      */
     createClient(context) {
         throw new Error('createClient() must be implemented by subclass');
@@ -37,7 +37,7 @@ export class BaseProvider {
      * Must be implemented by subclasses.
      * @param {ProviderContext} context
      * @param {boolean} isStream - Whether the request should be a streaming request
-     * @returns {Object} Request parameters
+     * @returns {any} Request parameters
      */
     buildRequestParams(context, isStream) {
         throw new Error('buildRequestParams() must be implemented by subclass');
@@ -46,7 +46,7 @@ export class BaseProvider {
     /**
      * Extract text content from a streaming chunk.
      * Must be implemented by subclasses.
-     * @param {Object} chunk - A single chunk from the async iterator
+     * @param {any} chunk - A single chunk from the async iterator
      * @returns {string} Extracted text (may be empty)
      */
     extractContent(chunk) {
@@ -56,7 +56,7 @@ export class BaseProvider {
     /**
      * Extract text content from a non-streaming response.
      * Must be implemented by subclasses.
-     * @param {Object} response - The SDK response object
+     * @param {any} response - The SDK response object
      * @returns {string} Extracted text
      */
     extractResponseContent(response) {
@@ -67,9 +67,9 @@ export class BaseProvider {
      * Execute the SDK request (streaming or non-streaming).
      * Default implementation calls client.chat.completions.create(params).
      * Subclasses can override if the SDK method differs (e.g. ollama.generate).
-     * @param {Object} client - SDK client
-     * @param {Object} params - Request parameters
-     * @returns {Promise<Object|AsyncIterable>} Response or async iterable
+     * @param {any} client - SDK client
+     * @param {any} params - Request parameters
+     * @returns {Promise<any>} Response or async iterable
      */
     async executeRequest(client, params) {
         return await client.chat.completions.create(params);
@@ -79,9 +79,9 @@ export class BaseProvider {
      * Merge extra options (JSON string) into the base options object.
      * Critical fields in baseOptions (model, messages, etc.) are protected
      * from being overwritten by user-supplied extra options.
-     * @param {Object} baseOptions - Options that must not be overwritten
-     * @param {string|null} extraOptions - JSON string of user-supplied options
-     * @returns {Object} Merged options
+     * @param {any} baseOptions - Options that must not be overwritten
+     * @param {string|null|undefined} extraOptions - JSON string of user-supplied options
+     * @returns {any} Merged options
      */
     mergeExtraOptions(baseOptions, extraOptions) {
         if (!extraOptions) {
@@ -128,7 +128,7 @@ export class BaseProvider {
     /**
      * Handle a streaming request: iterate chunks, check cancellation,
      * and send streamUpdate messages to the content script.
-     * @param {Object} client
+     * @param {any} client
      * @param {ProviderContext} context
      * @returns {Promise<string>} Full accumulated response
      */
@@ -158,7 +158,7 @@ export class BaseProvider {
 
     /**
      * Handle a non-streaming request.
-     * @param {Object} client
+     * @param {any} client
      * @param {ProviderContext} context
      * @returns {Promise<string>} Response text
      */

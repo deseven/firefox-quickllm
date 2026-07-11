@@ -7,10 +7,12 @@ import { PROVIDER_TYPES, getDefaultEndpoint } from './provider-types.js';
 import { OpenAIProvider } from './openai-provider.js';
 import { AnthropicProvider } from './anthropic-provider.js';
 import { OllamaProvider } from './ollama-provider.js';
+import { BaseProvider } from './base-provider.js';
 
 // Singleton provider instances. Providers are stateless (all per-request
 // state lives in the ProviderContext passed to process()), so a single
 // instance per type is safe to reuse across requests.
+/** @type {Record<string, BaseProvider>} */
 const providers = {
     [PROVIDER_TYPES.OPENAI]: new OpenAIProvider(),
     [PROVIDER_TYPES.OPENROUTER]: new OpenAIProvider(),

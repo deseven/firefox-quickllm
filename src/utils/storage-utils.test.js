@@ -1,6 +1,6 @@
 // Tests for storage-utils.js — profile validation, ID generation, and the
 // API key obfuscation/migration behaviour
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
     validateProfile,
     validateProfiles,
@@ -525,9 +525,15 @@ describe('getProfilesResponse', () => {
         // error rather than propagating the storage failure.
         storageGet.mockRejectedValue(new Error('storage exploded'));
 
-        const result = await getProfilesResponse();
-        expect(result.profiles).toEqual([]);
-        expect(result.error).toBeNull();
+        // Suppress the expected console.error from getStorageData's catch.
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        try {
+            const result = await getProfilesResponse();
+            expect(result.profiles).toEqual([]);
+            expect(result.error).toBeNull();
+        } finally {
+            errorSpy.mockRestore();
+        }
     });
 });
 
@@ -572,10 +578,45 @@ describe('saveThemeSetting', () => {
 // ---------------------------------------------------------------------------
 
 describe('getExtensionInfo', () => {
+    afterEach(() => {
+        // Clean up any chrome global we attach so tests don't leak.
+        if (globalThis.chrome === undefined) {
+            delete globalThis.chrome;
+        }
+    });
+
     it('returns manifest data when available', () => {
+        // Provide a chrome.runtime.getManifest mock so the happy path is
+        // exercised instead of the fallback.
+        globalThis.chrome = {
+            runtime: {
+                getManifest: () => ({
+                    name: 'QuickLLM',
+                    version: '1.2.3',
+                    description: 'A test description'
+                })
+            }
+        };
+
         const result = getExtensionInfo();
-        expect(result).toHaveProperty('name');
-        expect(result).toHaveProperty('version');
-        expect(result).toHaveProperty('description');
+        expect(result.name).toBe('QuickLLM');
+        expect(result.version).toBe('1.2.3');
+        expect(result.description).toBe('A test description');
+    });
+
+    it('falls back to defaults when chrome is unavailable', () => {
+        // Ensure no chrome global is present so the catch path runs.
+        delete globalThis.chrome;
+
+        // Suppress the expected console.warn from the catch block.
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        try {
+            const result = getExtensionInfo();
+            expect(result.name).toBe('QuickLLM');
+            expect(result.version).toBe('DEV');
+            expect(result.description).toBe('');
+        } finally {
+            warnSpy.mockRestore();
+        }
     });
 });

@@ -1,5 +1,6 @@
 const esbuild = require('esbuild');
 const { polyfillNode } = require('esbuild-plugin-polyfill-node');
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -140,8 +141,44 @@ const buildOptions = {
   external: [],
 };
 
+/**
+ * Run `tsc --noEmit` and fail the build if there are any type errors in src/.
+ * Errors in node_modules/ (third-party) are ignored. This gate keeps the
+ * codebase type-clean without coupling to esbuild's (non-existent) type
+ * checking.
+ */
+function typecheck() {
+  const tscBin = path.join(__dirname, 'node_modules', '.bin', 'tsc');
+  let output;
+  try {
+    execSync(`"${tscBin}" --noEmit -p "${path.join(__dirname, 'jsconfig.json')}"`, {
+      cwd: __dirname,
+      encoding: 'utf8',
+      stdio: 'pipe',
+    });
+    output = '';
+  } catch (error) {
+    output = (error.stdout || '') + (error.stderr || '');
+  }
+
+  const srcErrors = output
+    .split('\n')
+    .filter((line) => /\bsrc\//.test(line));
+
+  if (srcErrors.length > 0) {
+    console.error('\n❌ Type check failed — errors in src/:\n');
+    console.error(srcErrors.join('\n'));
+    console.error(`\n${srcErrors.length} type error(s) in src/. Fix them before building.`);
+    process.exit(1);
+  }
+  console.log('✓ Type check passed (no errors in src/).');
+}
+
 async function build() {
   try {
+    // Type-check before bundling so type errors fail the build.
+    typecheck();
+
     // Clean dist directory
     if (fs.existsSync('dist')) {
       fs.rmSync('dist', { recursive: true, force: true });

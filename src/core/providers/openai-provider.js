@@ -11,6 +11,8 @@ export class OpenAIProvider extends BaseProvider {
      * `dangerouslyAllowBrowser: true` is required because the SDK runs in the
      * extension background script (a browser context). This is safe here because
      * the key never reaches content scripts or page DOM.
+     * @param {import('./base-provider.js').ProviderContext} context
+     * @returns {any}
      */
     createClient(context) {
         const { apiKey, endpoint } = context;
@@ -24,6 +26,9 @@ export class OpenAIProvider extends BaseProvider {
     /**
      * Build the chat.completions request parameters.
      * Message array: optional system prompt, optional user prompt, then the text.
+     * @param {import('./base-provider.js').ProviderContext} context
+     * @param {boolean} isStream
+     * @returns {any}
      */
     buildRequestParams(context, isStream) {
         const { model, systemPrompt, userPrompt, text } = context;
@@ -46,6 +51,8 @@ export class OpenAIProvider extends BaseProvider {
 
     /**
      * Extract content from a streaming chunk.
+     * @param {any} chunk
+     * @returns {string}
      */
     extractContent(chunk) {
         return chunk.choices?.[0]?.delta?.content || '';
@@ -53,6 +60,8 @@ export class OpenAIProvider extends BaseProvider {
 
     /**
      * Extract content from a non-streaming response.
+     * @param {any} completion
+     * @returns {string}
      */
     extractResponseContent(completion) {
         return completion.choices[0].message.content;
