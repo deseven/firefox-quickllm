@@ -1,6 +1,7 @@
 // Markdown renderer utility with GFM support and syntax highlighting
 import { marked } from 'marked';
 import hljs from 'highlight.js/lib/core';
+import { escapeHtml } from './dom-utils.js';
 
 // Import only the most common languages to reduce bundle size
 import javascript from 'highlight.js/lib/languages/javascript';
@@ -77,7 +78,7 @@ class MarkdownRenderer {
         } catch (error) {
             console.error('Markdown rendering failed:', error);
             // Fallback to escaped plain text
-            return this.escapeHtml(markdown).replace(/\n/g, '<br>');
+            return escapeHtml(markdown).replace(/\n/g, '<br>');
         }
     }
 
@@ -126,20 +127,6 @@ class MarkdownRenderer {
         html = html.replace(/<a href="([^"]*)"([^>]*)>/g, '<a href="$1"$2 target="_blank" rel="noopener noreferrer">');
         
         return html;
-    }
-
-    /**
-     * Escape HTML characters for safety
-     * @param {string} text - Text to escape
-     * @returns {string} - Escaped text
-     */
-    escapeHtml(text) {
-        return text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
     }
 
 }

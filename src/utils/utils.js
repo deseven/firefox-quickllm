@@ -25,6 +25,8 @@ export {
     getProfilesResponse,
     validateProfile,
     validateProfiles,
+    generateProfileId,
+    generateProfileId as generateId,
     getExtensionInfo
 } from './storage-utils.js';
 
@@ -32,6 +34,7 @@ export {
 export {
     createElement,
     clearElement,
+    escapeHtml,
     renderMarkdownToElement,
     renderMarkdownToElement as renderMarkdownContent,
     createLoadingElement,
@@ -50,28 +53,6 @@ export {
 // Diff renderer
 export { default as diffRenderer } from './diff-renderer.js';
 export { DiffRenderer } from './diff-renderer.js';
-
-/**
- * Escape HTML to prevent XSS attacks
- * @param {string} text - Text to escape
- * @returns {string} Escaped HTML
- */
-export function escapeHtml(text) {
-    return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
-
-/**
- * Generate a unique ID for profiles
- * @returns {string} Unique profile ID
- */
-export function generateId() {
-    return 'profile_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
 
 /**
  * Get default endpoint for profile types that have one.

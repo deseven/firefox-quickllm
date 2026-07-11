@@ -3,8 +3,9 @@ import './settings.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as bootstrap from 'bootstrap';
 import Sortable from 'sortablejs';
-import { applyTheme, loadProfiles, saveProfiles, getThemeSetting, saveThemeSetting, handleThemeChange, getThemeDisplayName, getExtensionInfo, generateId, clearElement, formatEndpointForDisplay, getDefaultEndpoint } from '../../utils/utils.js';
-import { getProviderIcon } from '../../core/providers/provider-types.js';
+import { applyTheme, loadProfiles, saveProfiles, getThemeSetting, saveThemeSetting, handleThemeChange, getThemeDisplayName, getExtensionInfo, generateId, clearElement } from '../../utils/utils.js';
+import { getProfileIcon, getProfileModelText } from '../../utils/profile-ui-utils.js';
+import { validateProfile } from '../../utils/storage-utils.js';
 
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
@@ -62,7 +63,7 @@ class SettingsManager {
         }
     }
 
-    async saveProfiles() {
+    async persistProfiles() {
         await saveProfiles(this.profiles);
     }
 
@@ -167,7 +168,7 @@ class SettingsManager {
                 // Reorder profiles array
                 const item = this.profiles.splice(evt.oldIndex, 1)[0];
                 this.profiles.splice(evt.newIndex, 0, item);
-                this.saveProfiles();
+                this.persistProfiles();
             }
         });
     }
@@ -192,20 +193,6 @@ class SettingsManager {
         });
     }
 
-    getProfileIcon(profile) {
-        // Delegate to the central provider-types registry so icon logic
-        // is defined in a single place.
-        return getProviderIcon(profile.type, profile.endpoint);
-    }
-
-    shouldDisplayEndpoint(profile) {
-        if (!profile.endpoint) {
-            return false;
-        }
-        const defaultEndpoint = getDefaultEndpoint(profile.type);
-        return !defaultEndpoint || profile.endpoint !== defaultEndpoint;
-    }
-
     createProfileElement(profile) {
         // Create main profile item container
         const profileItem = document.createElement('div');
@@ -226,7 +213,7 @@ class SettingsManager {
         const profileType = document.createElement('span');
         profileType.className = `profile-type ${profile.type}`;
         const typeIcon = document.createElement('i');
-        typeIcon.className = this.getProfileIcon(profile);
+        typeIcon.className = getProfileIcon(profile);
         profileType.appendChild(typeIcon);
 
         profileHeader.appendChild(dragHandle);
@@ -239,9 +226,7 @@ class SettingsManager {
 
         const profileModel = document.createElement('div');
         profileModel.className = 'profile-model';
-        const modelText = this.shouldDisplayEndpoint(profile) ?
-            `${profile.model} (${formatEndpointForDisplay(profile.endpoint)})` :
-            profile.model;
+        const modelText = getProfileModelText(profile);
         profileModel.textContent = modelText;
 
         const profileOptions = document.createElement('div');
@@ -346,7 +331,7 @@ class SettingsManager {
     async deleteProfile(profileId) {
         if (confirm('Are you sure you want to delete this profile?')) {
             this.profiles = this.profiles.filter(p => p.id !== profileId);
-            await this.saveProfiles();
+            await this.persistProfiles();
             this.renderProfiles();
             this.showStatus('Profile deleted successfully.', 'success');
         }
@@ -458,17 +443,10 @@ class SettingsManager {
                 return;
             }
 
-            // Basic validation of profile structure
-            const isValidProfile = (profile) => {
-                return profile &&
-                       typeof profile.id === 'string' &&
-                       typeof profile.name === 'string' &&
-                       typeof profile.type === 'string' &&
-                       typeof profile.model === 'string' &&
-                       (typeof profile.apiKey === 'string' || profile.apiKey === null || profile.apiKey === undefined);
-            };
-
-            if (!importedProfiles.every(isValidProfile)) {
+            // Validate profile structure using the shared validator.
+            // validateProfile accepts null/undefined apiKey, which covers
+            // imported profiles that may not include a key.
+            if (!importedProfiles.every(validateProfile)) {
                 this.showStatus('Invalid profiles file format. Some profiles are missing required fields.', 'danger');
                 return;
             }
@@ -487,7 +465,7 @@ class SettingsManager {
 
             // Replace profiles
             this.profiles = decryptedProfiles;
-            await this.saveProfiles();
+            await this.persistProfiles();
             this.renderProfiles();
 
             this.showStatus(`Successfully imported ${importedProfiles.length} profiles.`, 'success');

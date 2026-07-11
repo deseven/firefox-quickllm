@@ -2,6 +2,23 @@
 import markdownRenderer from './markdown-renderer.js';
 
 /**
+ * Escape HTML special characters to prevent XSS attacks.
+ * Used when inserting untrusted text into the DOM as raw HTML.
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped HTML
+ */
+export function escapeHtml(text) {
+    const entityMap = {
+        '&': String.fromCharCode(38) + 'amp;',
+        '<': String.fromCharCode(38) + 'lt;',
+        '>': String.fromCharCode(38) + 'gt;',
+        '"': String.fromCharCode(38) + 'quot;',
+        "'": String.fromCharCode(38) + '#39;'
+    };
+    return String(text).replace(/[&<>"']/g, (ch) => entityMap[ch]);
+}
+
+/**
  * Create DOM elements programmatically with options
  * @param {string} tag - HTML tag name
  * @param {Object} options - Element options

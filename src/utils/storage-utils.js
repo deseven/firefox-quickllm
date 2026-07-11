@@ -185,7 +185,7 @@ export function validateProfile(profile) {
            typeof profile.name === 'string' &&
            typeof profile.type === 'string' &&
            typeof profile.model === 'string' &&
-           (typeof profile.apiKey === 'string' || profile.apiKey === null);
+           (typeof profile.apiKey === 'string' || profile.apiKey === null || profile.apiKey === undefined);
 }
 
 /**

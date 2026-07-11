@@ -2,8 +2,8 @@
 import './extension.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as bootstrap from 'bootstrap';
-import { applyTheme, loadProfiles, clearElement, formatEndpointForDisplay, getDefaultEndpoint } from '../../utils/utils.js';
-import { getProviderIcon } from '../../core/providers/provider-types.js';
+import { applyTheme, loadProfiles, clearElement } from '../../utils/utils.js';
+import { getProfileIcon, getProfileModelText } from '../../utils/profile-ui-utils.js';
 
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
@@ -61,22 +61,6 @@ class ProfileManager {
         });
     }
 
-    getProfileIcon(profile) {
-        // Delegate to the central provider-types registry so icon logic
-        // is defined in a single place.
-        return getProviderIcon(profile.type, profile.endpoint);
-    }
-
-    shouldDisplayEndpoint(profile) {
-        // Only display endpoint if it's custom (not the default for this type)
-        if (!profile.endpoint) {
-            return false;
-        }
-        const defaultEndpoint = getDefaultEndpoint(profile.type);
-        // Show endpoint if there's no default, or if it differs from the default
-        return !defaultEndpoint || profile.endpoint !== defaultEndpoint;
-    }
-
     createProfileElement(profile) {
         // Create main profile item container - clickable
         const profileItem = document.createElement('div');
@@ -95,7 +79,7 @@ class ProfileManager {
         const profileType = document.createElement('span');
         profileType.className = `profile-type ${profile.type}`;
         const typeIcon = document.createElement('i');
-        typeIcon.className = this.getProfileIcon(profile);
+        typeIcon.className = getProfileIcon(profile);
         profileType.appendChild(typeIcon);
 
         profileHeader.appendChild(profileName);
@@ -107,9 +91,7 @@ class ProfileManager {
 
         const profileModel = document.createElement('div');
         profileModel.className = 'profile-model';
-        const modelText = this.shouldDisplayEndpoint(profile) ?
-            `${profile.model} (${formatEndpointForDisplay(profile.endpoint)})` :
-            profile.model;
+        const modelText = getProfileModelText(profile);
         profileModel.textContent = modelText;
 
         profileDetails.appendChild(profileModel);
