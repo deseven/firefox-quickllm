@@ -101,15 +101,21 @@
                 <div class="options-grid">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="diffOutput" name="diffOutput">
-                        <label class="form-check-label" for="diffOutput">
-                            Show changes (diff) against input
-                        </label>
+                        <div class="form-check-content">
+                            <label class="form-check-label" for="diffOutput">
+                                Show changes (diff) against input
+                            </label>
+                            <small class="form-text text-muted">When enabled, the result is displayed as a diff against the original input, highlighting additions and removals instead of rendering as Markdown.</small>
+                        </div>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" id="processImmediately" name="processImmediately">
-                        <label class="form-check-label" for="processImmediately">
-                            Process immediately
-                        </label>
+                        <div class="form-check-content">
+                            <label class="form-check-label" for="processImmediately">
+                                Process immediately
+                            </label>
+                            <small class="form-text text-muted">When enabled, processing starts automatically as soon as the profile is chosen, skipping the prompt editing/confirmation step. Hold Shift while choosing a profile to bypass.</small>
+                        </div>
                     </div>
                 </div>
             </div>

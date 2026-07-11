@@ -259,6 +259,9 @@ class SettingsManager {
         const profileOptions = document.createElement('div');
         profileOptions.className = 'profile-options';
 
+        const profileFlags = document.createElement('div');
+        profileFlags.className = 'profile-flags';
+
         const processInfo = document.createElement('small');
         processInfo.className = 'text-muted';
         const processIcon = document.createElement('i');
@@ -266,6 +269,17 @@ class SettingsManager {
         processIcon.setAttribute('title', 'Process immediately');
         processInfo.appendChild(processIcon);
         processInfo.appendChild(document.createTextNode(' Process immediately'));
+
+        const diffInfo = document.createElement('small');
+        diffInfo.className = 'text-muted';
+        const diffIcon = document.createElement('i');
+        diffIcon.className = `bx ${profile.diffOutput ? 'bx-check-square' : 'bx-square'}`;
+        diffIcon.setAttribute('title', 'Diff output');
+        diffInfo.appendChild(diffIcon);
+        diffInfo.appendChild(document.createTextNode(' Diff output'));
+
+        profileFlags.appendChild(processInfo);
+        profileFlags.appendChild(diffInfo);
 
         const profileActions = document.createElement('div');
         profileActions.className = 'profile-actions';
@@ -317,7 +331,7 @@ class SettingsManager {
         profileActions.appendChild(editBtn);
         profileActions.appendChild(deleteBtn);
 
-        profileOptions.appendChild(processInfo);
+        profileOptions.appendChild(profileFlags);
         profileOptions.appendChild(profileActions);
 
         profileDetails.appendChild(profileModel);

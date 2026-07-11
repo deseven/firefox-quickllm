@@ -504,6 +504,13 @@ h5 i {
     gap: 4px;
 }
 
+.profile-flags {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
 .profile-options small i {
     vertical-align: middle;
     line-height: 1;

@@ -345,8 +345,19 @@ body.dark-theme .template-item:hover {
 
 .form-check {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
+}
+
+.form-check-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.form-check-content .form-text {
+    font-size: 0.75rem;
+    line-height: 1.3;
 }
 
 .form-check-input {
