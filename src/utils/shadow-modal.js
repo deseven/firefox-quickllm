@@ -1,5 +1,6 @@
 // Shadow DOM Modal utility for QuickLLM extension
-import { escapeHtml, prefersDarkMode } from './utils.js';
+import { escapeHtml } from './dom-utils.js';
+import { prefersDarkMode } from './theme-utils.js';
 import shadowModalStyles from '../styles/shadow-modal.css';
 
 class ShadowModal {

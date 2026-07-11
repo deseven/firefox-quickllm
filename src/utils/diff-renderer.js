@@ -1,6 +1,6 @@
 // Diff renderer utility for showing changes between input and output text
 import { diffWordsWithSpace } from 'diff';
-import { escapeHtml } from './utils.js';
+import { escapeHtml } from './dom-utils.js';
 
 class DiffRenderer {
     /**

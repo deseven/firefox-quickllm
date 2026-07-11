@@ -1,7 +1,9 @@
 // Profile editing page functionality
 import './profile-edit.css';
 import { PROMPT_TEMPLATES } from '../../utils/prompt-templates.js';
-import { applyTheme, escapeHtml, generateId, clearElement, loadProfiles, saveProfiles } from '../../utils/utils.js';
+import { applyTheme } from '../../utils/theme-utils.js';
+import { escapeHtml, clearElement } from '../../utils/dom-utils.js';
+import { loadProfiles, saveProfiles, generateProfileId } from '../../utils/storage-utils.js';
 import { PROVIDER_METADATA, getProviderTypeList } from '../../core/providers/provider-types.js';
 
 class ProfileEditor {
@@ -294,7 +296,7 @@ class ProfileEditor {
                 }
             } else {
                 // Add new profile
-                profileData.id = generateId();
+                profileData.id = generateProfileId();
                 profiles.push(profileData);
             }
 

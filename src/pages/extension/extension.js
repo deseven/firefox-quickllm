@@ -2,7 +2,9 @@
 import './extension.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as bootstrap from 'bootstrap';
-import { applyTheme, loadProfiles, clearElement } from '../../utils/utils.js';
+import { applyTheme } from '../../utils/theme-utils.js';
+import { loadProfiles } from '../../utils/storage-utils.js';
+import { clearElement } from '../../utils/dom-utils.js';
 import { getProfileIcon, getProfileModelText } from '../../utils/profile-ui-utils.js';
 import { createProcessContentMessage } from '../../core/messages.js';
 

@@ -1,5 +1,7 @@
 // Content script for QuickLLM extension
-import { escapeHtml, prefersDarkMode, createElement, clearElement, renderMarkdownToElement, createLoadingElement, showErrorState, diffRenderer } from '../utils/utils.js';
+import { escapeHtml, createElement, clearElement, renderMarkdownToElement, createLoadingElement, showErrorState } from '../utils/dom-utils.js';
+import { prefersDarkMode } from '../utils/theme-utils.js';
+import diffRenderer from '../utils/diff-renderer.js';
 import ShadowModal from '../utils/shadow-modal.js';
 import TurndownService from 'turndown';
 import {

@@ -1,5 +1,5 @@
 // Process modal functionality for AI response handling
-import { renderMarkdownToElement, clearElement, copyToClipboardWithFeedback, createBootstrapLoadingElement } from '../../utils/utils.js';
+import { renderMarkdownToElement, clearElement, copyToClipboardWithFeedback, createBootstrapLoadingElement } from '../../utils/dom-utils.js';
 
 document.addEventListener('DOMContentLoaded', function() {
     const copyResponseBtn = document.getElementById('copyResponseBtn');

@@ -2,7 +2,7 @@
 import './help.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { renderMarkdownToElement } from '../../utils/dom-utils.js';
-import { applyTheme } from '../../utils/utils.js';
+import { applyTheme } from '../../utils/theme-utils.js';
 
 class HelpPage {
     constructor() {

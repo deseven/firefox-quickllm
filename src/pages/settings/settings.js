@@ -3,7 +3,9 @@ import './settings.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import * as bootstrap from 'bootstrap';
 import Sortable from 'sortablejs';
-import { applyTheme, loadProfiles, saveProfiles, getThemeSetting, saveThemeSetting, handleThemeChange, getThemeDisplayName, getExtensionInfo, generateId, clearElement } from '../../utils/utils.js';
+import { applyTheme, getThemeSetting, saveThemeSetting, handleThemeChange, getThemeDisplayName } from '../../utils/theme-utils.js';
+import { loadProfiles, saveProfiles, getExtensionInfo, generateProfileId } from '../../utils/storage-utils.js';
+import { clearElement } from '../../utils/dom-utils.js';
 import { getProfileIcon, getProfileModelText } from '../../utils/profile-ui-utils.js';
 import { validateProfile } from '../../utils/storage-utils.js';
 import { xorEncode, xorDecode } from '../../utils/crypto-utils.js';
@@ -341,7 +343,7 @@ class SettingsManager {
             const cloneData = {
                 ...profile,
                 name: `${profile.name} (clone)`,
-                id: generateId()
+                id: generateProfileId()
             };
             
             const cloneDataParam = encodeURIComponent(JSON.stringify(cloneData));
