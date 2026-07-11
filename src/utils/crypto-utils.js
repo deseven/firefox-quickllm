@@ -10,6 +10,10 @@
 // plaintext keys stored before this feature existed, so migration is seamless.
 
 /**
+ * @typedef {import('../content/types.js').Profile} Profile
+ */
+
+/**
  * Static XOR key. Shared between storage obfuscation and export obfuscation so
  * the two stay consistent. Intended to be used simply to avoid storing keys as plain text.
  */
@@ -96,8 +100,8 @@ export function isObfuscatedKey(storedKey) {
 /**
  * Obfuscate the `apiKey` field of every profile in an array. Returns a new
  * array of shallow-copied profiles; the input is not mutated.
- * @param {Array<Object>} profiles - Profiles with plaintext apiKeys.
- * @returns {Array<Object>} Profiles with obfuscated apiKeys.
+ * @param {Profile[]|*} profiles - Profiles with plaintext apiKeys.
+ * @returns {Profile[]|*} Profiles with obfuscated apiKeys.
  */
 export function obfuscateProfileApiKeys(profiles) {
     if (!Array.isArray(profiles)) return profiles;
@@ -110,8 +114,8 @@ export function obfuscateProfileApiKeys(profiles) {
 /**
  * Deobfuscate the `apiKey` field of every profile in an array. Returns a new
  * array of shallow-copied profiles; the input is not mutated.
- * @param {Array<Object>} profiles - Profiles with stored (obfuscated/legacy) apiKeys.
- * @returns {Array<Object>} Profiles with plaintext apiKeys.
+ * @param {Profile[]|*} profiles - Profiles with stored (obfuscated/legacy) apiKeys.
+ * @returns {Profile[]|*} Profiles with plaintext apiKeys.
  */
 export function deobfuscateProfileApiKeys(profiles) {
     if (!Array.isArray(profiles)) return profiles;
@@ -124,7 +128,7 @@ export function deobfuscateProfileApiKeys(profiles) {
 /**
  * Detect whether any profile still holds a legacy plaintext (non-obfuscated)
  * API key and therefore needs to be re-saved in the obfuscated format.
- * @param {Array<Object>} profiles - Profiles as read from storage.
+ * @param {Profile[]|*} profiles - Profiles as read from storage.
  * @returns {boolean} True when at least one profile needs migration.
  */
 export function profilesNeedMigration(profiles) {

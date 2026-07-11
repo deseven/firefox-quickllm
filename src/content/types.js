@@ -7,18 +7,24 @@
 
 /**
  * A configured LLM profile.
+ *
+ * This is the canonical shape used across storage, background, content,
+ * and UI layers. In memory, `apiKey` holds plaintext; in storage it is
+ * obfuscated (see crypto-utils.js). The `id` is assigned at creation time
+ * and is stable for the profile's lifetime.
+ *
  * @typedef {Object} Profile
  * @property {string} id - Unique profile identifier.
  * @property {string} name - Display name.
  * @property {string} type - Provider type string (e.g. 'openai', 'anthropic', 'ollama').
  * @property {string} model - Model identifier to use.
- * @property {string|null} [apiKey] - API key (plaintext in memory, obfuscated in storage).
- * @property {string} [endpoint] - Custom endpoint URL override.
+ * @property {string|null|undefined} [apiKey] - API key (plaintext in memory, obfuscated in storage).
+ * @property {string|null} [endpoint] - Custom endpoint URL override, or null to use the provider default.
  * @property {string} [systemPrompt] - System prompt text.
- * @property {string} [userPrompt] - Default user prompt text.
+ * @property {string|null} [userPrompt] - Default user prompt text, or null when unset.
  * @property {boolean} [processImmediately] - Whether to auto-run on profile selection.
  * @property {boolean} [diffOutput] - Whether to render the response as a diff.
- * @property {string} [extraOptions] - JSON string of extra provider options.
+ * @property {string|null} [extraOptions] - JSON string of extra provider options, or null when unset.
  */
 
 /**

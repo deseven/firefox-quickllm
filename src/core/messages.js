@@ -17,6 +17,47 @@
  * Message type constants — the single source of truth for message names.
  * Use these instead of raw strings when building or matching messages.
  */
+
+/**
+ * A configured LLM profile. Re-exported here so modules that only deal with
+ * message passing can reference the profile shape without importing from the
+ * content layer.
+ * @typedef {import('../content/types.js').Profile} Profile
+ */
+
+/**
+ * Payload for a processWithLLM message.
+ * @typedef {Object} ProcessWithLLMMessage
+ * @property {typeof MESSAGE_TYPES.PROCESS_WITH_LLM} type
+ * @property {Profile} profile - Full profile object (includes apiKey)
+ * @property {string} userPrompt - The user's prompt
+ * @property {string} text - The text to process
+ * @property {boolean} isStreaming - Whether to stream the response
+ * @property {string} streamId - Unique stream identifier
+ */
+
+/**
+ * Payload for a streamUpdate message sent to a content script.
+ * @typedef {Object} StreamUpdateMessage
+ * @property {typeof MESSAGE_TYPES.STREAM_UPDATE} type
+ * @property {string} content - The accumulated response content so far
+ * @property {string} streamId - The stream this update belongs to
+ */
+
+/**
+ * Success response for a processWithLLM request.
+ * @typedef {Object} LLMSuccessResponse
+ * @property {true} success
+ * @property {string} response - The full response text
+ * @property {string} streamId - The stream ID that was used
+ */
+
+/**
+ * Error response for a processWithLLM request.
+ * @typedef {Object} LLMErrorResponse
+ * @property {false} success
+ * @property {string} error - The error message
+ */
 export const MESSAGE_TYPES = Object.freeze({
     // runtime messages (popup/content -> background)
     GET_PROFILES: 'getProfiles',
@@ -55,12 +96,12 @@ export function createGetProfilesMessage() {
 
 /**
  * Build a processWithLLM message.
- * @param {Object} profile - Full profile object (includes apiKey)
+ * @param {Profile} profile - Full profile object (includes apiKey)
  * @param {string} userPrompt - The user's prompt
  * @param {string} text - The text to process
  * @param {boolean} isStreaming - Whether to stream the response
  * @param {string} streamId - Unique stream identifier
- * @returns {{ type: string, profile: Object, userPrompt: string, text: string, isStreaming: boolean, streamId: string }}
+ * @returns {ProcessWithLLMMessage}
  */
 export function createProcessWithLLMMessage(profile, userPrompt, text, isStreaming, streamId) {
     return {
@@ -103,12 +144,13 @@ export function createProfilesUpdatedMessage() {
 
 /**
  * Build a processContent message sent to a content script.
- * @param {string} [profileId] - Optional profile ID to process with
+ * @param {string|null} [profileId] - Optional profile ID to process with
  * @returns {{ type: string, profileId?: string }}
  */
 export function createProcessContentMessage(profileId = null) {
+    /** @type {{ type: string, profileId?: string }} */
     const message = { type: MESSAGE_TYPES.PROCESS_CONTENT };
-    if (profileId !== null) {
+    if (profileId !== null && profileId !== undefined) {
         message.profileId = profileId;
     }
     return message;
@@ -118,7 +160,7 @@ export function createProcessContentMessage(profileId = null) {
  * Build a streamUpdate message sent to a content script.
  * @param {string} content - The accumulated response content so far
  * @param {string} streamId - The stream this update belongs to
- * @returns {{ type: string, content: string, streamId: string }}
+ * @returns {StreamUpdateMessage}
  */
 export function createStreamUpdateMessage(content, streamId) {
     return {
@@ -136,7 +178,7 @@ export function createStreamUpdateMessage(content, streamId) {
  * Build a success response for a processWithLLM request.
  * @param {string} response - The full response text
  * @param {string} streamId - The stream ID that was used
- * @returns {{ success: true, response: string, streamId: string }}
+ * @returns {LLMSuccessResponse}
  */
 export function createLLMSuccessResponse(response, streamId) {
     return { success: true, response, streamId };
@@ -145,7 +187,7 @@ export function createLLMSuccessResponse(response, streamId) {
 /**
  * Build an error response for a processWithLLM request.
  * @param {string} error - The error message
- * @returns {{ success: false, error: string }}
+ * @returns {LLMErrorResponse}
  */
 export function createLLMErrorResponse(error) {
     return { success: false, error };
@@ -153,9 +195,9 @@ export function createLLMErrorResponse(error) {
 
 /**
  * Build a getProfiles response.
- * @param {Array} profiles - Array of profile objects
+ * @param {Profile[]} profiles - Array of profile objects
  * @param {string|null} [error] - Optional error message
- * @returns {{ profiles: Array, error: string|null }}
+ * @returns {{ profiles: Profile[], error: string|null }}
  */
 export function createGetProfilesResponse(profiles, error = null) {
     return { profiles, error };
@@ -234,6 +276,7 @@ function assertObject(value, field) {
 /**
  * Validators for each message type.
  * Each throws an Error if the payload is malformed.
+ * @type {Record<string, (message: any) => void>}
  */
 export const MESSAGE_VALIDATORS = Object.freeze({
     [MESSAGE_TYPES.GET_PROFILES](message) {
@@ -276,7 +319,7 @@ export const MESSAGE_VALIDATORS = Object.freeze({
  * Validate a message against its type's schema.
  * Throws an Error if the message is missing a type, has an unknown type,
  * or fails the type-specific validation.
- * @param {Object} message - The message to validate
+ * @param {*} message - The message to validate
  * @returns {string} The validated message type
  * @throws {Error} if the message is invalid
  */
@@ -284,7 +327,7 @@ export function assertMessage(message) {
     if (!message || typeof message !== 'object') {
         throw new Error('Invalid message: expected an object');
     }
-    const { type } = message;
+    const type = /** @type {any} */ (message).type;
     if (typeof type !== 'string' || type.length === 0) {
         throw new Error('Invalid message: missing or empty "type"');
     }
@@ -298,7 +341,7 @@ export function assertMessage(message) {
 
 /**
  * Safely validate a message without throwing.
- * @param {Object} message - The message to validate
+ * @param {*} message - The message to validate
  * @returns {{ valid: boolean, error: string|null, type: string|null }}
  */
 export function validateMessage(message) {
@@ -306,6 +349,6 @@ export function validateMessage(message) {
         const type = assertMessage(message);
         return { valid: true, error: null, type };
     } catch (error) {
-        return { valid: false, error: error.message, type: message?.type ?? null };
+        return { valid: false, error: /** @type {Error} */ (error).message, type: /** @type {any} */ (message)?.type ?? null };
     }
 }

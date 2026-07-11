@@ -13,8 +13,21 @@ import {
     validateMessage
 } from './messages.js';
 
+/**
+ * @typedef {import('../content/types.js').Profile} Profile
+ * @typedef {import('./messages.js').ProcessWithLLMMessage} ProcessWithLLMMessage
+ * @typedef {import('./providers/base-provider.js').ProviderContext} ProviderContext
+ */
+
+/**
+ * Tracks cancellation state for an active stream.
+ * @typedef {Object} StreamController
+ * @property {boolean} cancelled - Whether the stream has been cancelled.
+ */
+
 class BackgroundManager {
     constructor() {
+        /** @type {Map<string, StreamController>} */
         this.activeStreams = new Map(); // Track active streaming requests
         this.init();
     }
@@ -59,62 +72,85 @@ class BackgroundManager {
     }
 
     setupMessageHandlers() {
-        browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            // Validate the message shape before dispatching. Malformed messages
-            // are logged and ignored rather than crashing the listener.
-            const { valid, error } = validateMessage(message);
-            if (!valid) {
-                console.warn('Rejecting invalid message:', error);
-                return false;
-            }
-
-            switch (message.type) {
-                case MESSAGE_TYPES.GET_PROFILES:
-                    this.handleGetProfiles(sendResponse);
-                    return true; // Keep message channel open for async response
-
-                case MESSAGE_TYPES.PROCESS_WITH_LLM:
-                    this.handleLLMRequest(message, sender, sendResponse);
-                    return true; // Keep message channel open for async response
-
-                case MESSAGE_TYPES.CANCEL_STREAM:
-                    this.handleCancelStream(message, sender, sendResponse);
-                    return true; // Async-capable: keep channel open for the response
-
-                case MESSAGE_TYPES.OPEN_POPUP:
-                    this.openPopup();
-                    return false; // Synchronous, no response payload needed
-
-                case MESSAGE_TYPES.PROFILES_UPDATED:
-                    this.setupContextMenus();
-                    return false; // Fire-and-forget, no response expected
-
-                default:
-                    console.log('Unknown message type:', message.type);
+        browser.runtime.onMessage.addListener(
+            /**
+             * @param {any} message
+             * @param {any} sender
+             * @param {Function} sendResponse
+             */
+            (message, sender, sendResponse) => {
+                // Validate the message shape before dispatching. Malformed messages
+                // are logged and ignored rather than crashing the listener.
+                const { valid, error } = validateMessage(message);
+                if (!valid) {
+                    console.warn('Rejecting invalid message:', error);
                     return false;
+                }
+
+                switch (message.type) {
+                    case MESSAGE_TYPES.GET_PROFILES:
+                        this.handleGetProfiles(sendResponse);
+                        return true; // Keep message channel open for async response
+
+                    case MESSAGE_TYPES.PROCESS_WITH_LLM:
+                        this.handleLLMRequest(message, sender, sendResponse);
+                        return true; // Keep message channel open for async response
+
+                    case MESSAGE_TYPES.CANCEL_STREAM:
+                        this.handleCancelStream(message, sender, sendResponse);
+                        return true; // Async-capable: keep channel open for the response
+
+                    case MESSAGE_TYPES.OPEN_POPUP:
+                        this.openPopup();
+                        return false; // Synchronous, no response payload needed
+
+                    case MESSAGE_TYPES.PROFILES_UPDATED:
+                        this.setupContextMenus();
+                        return false; // Fire-and-forget, no response expected
+
+                    default:
+                        console.log('Unknown message type:', message.type);
+                        return false;
+                }
             }
-        });
+        );
 
         // Handle context menu clicks
-        browser.contextMenus.onClicked.addListener((info, tab) => {
-            this.handleContextMenuClick(info, tab);
-        });
+        browser.contextMenus.onClicked.addListener(
+            /**
+             * @param {any} info
+             * @param {any} tab
+             */
+            (info, tab) => {
+                this.handleContextMenuClick(info, tab);
+            }
+        );
     }
 
     setupCommandHandlers() {
         // Handle keyboard shortcuts defined in manifest.json
-        browser.commands.onCommand.addListener((command) => {
-            if (command === 'open-quickllm') {
-                // Get the active tab and send message to content script
-                browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-                    if (tabs[0]) {
-                        browser.tabs.sendMessage(tabs[0].id, createProcessContentMessage());
-                    }
-                });
+        browser.commands.onCommand.addListener(
+            /** @param {any} command */
+            (command) => {
+                if (command === 'open-quickllm') {
+                    // Get the active tab and send message to content script
+                    browser.tabs.query({ active: true, currentWindow: true },
+                        /** @param {any[]} tabs */
+                        (tabs) => {
+                            if (tabs[0]) {
+                                browser.tabs.sendMessage(tabs[0].id, createProcessContentMessage());
+                            }
+                        }
+                    );
+                }
             }
-        });
+        );
     }
 
+    /**
+     * Handle a getProfiles message.
+     * @param {Function} sendResponse - Callback to send the response
+     */
     async handleGetProfiles(sendResponse) {
         try {
             // loadProfiles deobfuscates API keys (and migrates any legacy
@@ -124,10 +160,17 @@ class BackgroundManager {
             sendResponse(createGetProfilesResponse(profiles));
         } catch (error) {
             console.error('Error getting profiles:', error);
-            sendResponse(createGetProfilesResponse([], error.message));
+            sendResponse(createGetProfilesResponse([], /** @type {Error} */ (error).message));
         }
     }
 
+    /**
+     * Handle a processWithLLM message: look up the provider, build the
+     * context, and delegate to the provider's process() method.
+     * @param {ProcessWithLLMMessage} message - The validated message payload
+     * @param {Object} sender - The message sender (contains tab info)
+     * @param {Function} sendResponse - Callback to send the response
+     */
     async handleLLMRequest(message, sender, sendResponse) {
         try {
             const { profile, userPrompt, text, isStreaming = false, streamId } = message;
@@ -140,20 +183,29 @@ class BackgroundManager {
             const currentStreamId = streamId || `stream_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
             // Process with LLM using streamlined approach
-            const response = await this.processWithLLM(profile, userPrompt, text, isStreaming, sender.tab.id, currentStreamId);
+            const tabId = /** @type {any} */ (sender).tab?.id;
+            const response = await this.processWithLLM(profile, userPrompt, text, isStreaming, tabId, currentStreamId);
             sendResponse(createLLMSuccessResponse(response, currentStreamId));
 
         } catch (error) {
             console.error('Error processing LLM request:', error);
-            sendResponse(createLLMErrorResponse(error.message));
+            sendResponse(createLLMErrorResponse(/** @type {Error} */ (error).message));
         }
     }
 
+    /**
+     * Handle a cancelStream message.
+     * @param {Object} message - The cancelStream message payload
+     * @param {Object} sender - The message sender
+     * @param {Function} sendResponse - Callback to send the response
+     */
     handleCancelStream(message, sender, sendResponse) {
-        const { streamId } = message;
+        const { streamId } = /** @type {any} */ (message);
         if (streamId && this.activeStreams.has(streamId)) {
             const streamController = this.activeStreams.get(streamId);
-            streamController.cancelled = true;
+            if (streamController) {
+                streamController.cancelled = true;
+            }
             this.activeStreams.delete(streamId);
             console.log(`Stream ${streamId} cancelled`);
             sendResponse(createCancelStreamSuccessResponse());
@@ -162,6 +214,16 @@ class BackgroundManager {
         }
     }
 
+    /**
+     * Process text with an LLM provider.
+     * @param {Profile} profile - The profile to use (includes apiKey, model, etc.)
+     * @param {string} userPrompt - The user's prompt
+     * @param {string} text - The text to process
+     * @param {boolean} isStreaming - Whether to stream the response
+     * @param {number} tabId - The tab ID to send stream updates to
+     * @param {string} streamId - Unique stream identifier
+     * @returns {Promise<string>} The full response text
+     */
     async processWithLLM(profile, userPrompt, text, isStreaming, tabId, streamId) {
         const { type, apiKey, endpoint, model, extraOptions, systemPrompt } = profile;
 
@@ -207,11 +269,18 @@ class BackgroundManager {
         }
     }
 
+    /**
+     * Handle a context menu click.
+     * @param {Object} info - Context menu click info
+     * @param {Object} tab - The tab where the click occurred
+     */
     handleContextMenuClick(info, tab) {
-        switch (info.menuItemId) {
+        const menuItemId = /** @type {any} */ (info).menuItemId;
+        const tabId = /** @type {any} */ (tab).id;
+        switch (menuItemId) {
             case 'quickllm-process':
                 // Let content script determine if there's selected text or use page content
-                browser.tabs.sendMessage(tab.id, createProcessContentMessage());
+                browser.tabs.sendMessage(tabId, createProcessContentMessage());
                 break;
         }
     }

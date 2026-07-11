@@ -10,11 +10,16 @@ import { getProfileIcon, getProfileModelText } from '../../utils/profile-ui-util
 import { validateProfile } from '../../utils/storage-utils.js';
 import { xorEncode, xorDecode } from '../../utils/crypto-utils.js';
 
+/**
+ * @typedef {import('../../content/types.js').Profile} Profile
+ */
+
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
 
 class SettingsManager {
     constructor() {
+        /** @type {Profile[]} */
         this.profiles = [];
         this.sortable = null;
         this.statusTimeout = null;
@@ -35,7 +40,7 @@ class SettingsManager {
 
     async loadThemeSettings() {
         const currentTheme = await getThemeSetting();
-        const themeSelector = document.getElementById('themeSelector');
+        const themeSelector = /** @type {HTMLSelectElement} */ (document.getElementById('themeSelector'));
         if (themeSelector) {
             themeSelector.value = currentTheme;
         }
@@ -69,31 +74,31 @@ class SettingsManager {
 
     setupEventListeners() {
         // Theme selector
-        document.getElementById('themeSelector').addEventListener('change', (e) => {
-            this.handleThemeChange(e.target.value);
+        /** @type {HTMLSelectElement} */ (document.getElementById('themeSelector')).addEventListener('change', (e) => {
+            this.handleThemeChange(/** @type {HTMLSelectElement} */ (e.target).value);
         });
 
         // Add profile buttons
-        document.getElementById('addProfileBtn').addEventListener('click', () => {
+        document.getElementById('addProfileBtn')?.addEventListener('click', () => {
             this.navigateToEditPage();
         });
         
-        document.getElementById('addFirstProfileBtn').addEventListener('click', () => {
+        document.getElementById('addFirstProfileBtn')?.addEventListener('click', () => {
             this.navigateToEditPage();
         });
 
         // Export button
-        document.getElementById('exportProfilesBtn').addEventListener('click', () => {
+        document.getElementById('exportProfilesBtn')?.addEventListener('click', () => {
             this.exportProfiles();
         });
 
         // Import button
-        document.getElementById('importProfilesBtn').addEventListener('click', () => {
+        document.getElementById('importProfilesBtn')?.addEventListener('click', () => {
             this.importProfiles();
         });
 
         // File input
-        document.getElementById('importFileInput').addEventListener('change', (e) => {
+        document.getElementById('importFileInput')?.addEventListener('change', (e) => {
             this.handleFileImport(e);
         });
     }
@@ -104,12 +109,15 @@ class SettingsManager {
         
         tabButtons.forEach(button => {
             button.addEventListener('click', (e) => {
-                const targetTab = e.currentTarget.getAttribute('data-tab');
+                const targetTab = /** @type {HTMLElement} */ (e.currentTarget).getAttribute('data-tab') || '';
                 this.switchTab(targetTab);
             });
         });
     }
 
+    /**
+     * @param {string} tabId
+     */
     switchTab(tabId) {
         // Remove active class from all tabs and panes
         const allTabButtons = document.querySelectorAll('[data-tab]');
@@ -159,6 +167,7 @@ class SettingsManager {
 
     setupSortable() {
         const profilesList = document.getElementById('profilesList');
+        if (!profilesList) return;
         this.sortable = Sortable.create(profilesList, {
             animation: 150,
             ghostClass: 'sortable-ghost',
@@ -166,8 +175,10 @@ class SettingsManager {
             handle: '.drag-handle',
             onEnd: (evt) => {
                 // Reorder profiles array
-                const item = this.profiles.splice(evt.oldIndex, 1)[0];
-                this.profiles.splice(evt.newIndex, 0, item);
+                const oldIndex = evt.oldIndex ?? 0;
+                const newIndex = evt.newIndex ?? 0;
+                const item = this.profiles.splice(oldIndex, 1)[0];
+                this.profiles.splice(newIndex, 0, item);
                 this.persistProfiles();
             }
         });
@@ -176,6 +187,8 @@ class SettingsManager {
     renderProfiles() {
         const profilesList = document.getElementById('profilesList');
         const emptyState = document.getElementById('emptyState');
+
+        if (!profilesList || !emptyState) return;
 
         if (this.profiles.length === 0) {
             clearElement(profilesList);
@@ -193,6 +206,9 @@ class SettingsManager {
         });
     }
 
+    /**
+     * @param {Profile} profile
+     */
     createProfileElement(profile) {
         // Create main profile item container
         const profileItem = document.createElement('div');
@@ -286,17 +302,17 @@ class SettingsManager {
 
         // Add event listeners
         cloneBtn.addEventListener('click', (e) => {
-            const profileId = e.currentTarget.getAttribute('data-profile-id');
+            const profileId = /** @type {HTMLElement} */ (e.currentTarget).getAttribute('data-profile-id') || '';
             this.cloneProfile(profileId);
         });
 
         editBtn.addEventListener('click', (e) => {
-            const profileId = e.currentTarget.getAttribute('data-profile-id');
+            const profileId = /** @type {HTMLElement} */ (e.currentTarget).getAttribute('data-profile-id') || '';
             this.editProfile(profileId);
         });
 
         deleteBtn.addEventListener('click', (e) => {
-            const profileId = e.currentTarget.getAttribute('data-profile-id');
+            const profileId = /** @type {HTMLElement} */ (e.currentTarget).getAttribute('data-profile-id') || '';
             this.deleteProfile(profileId);
         });
 
@@ -316,6 +332,9 @@ class SettingsManager {
         return profileItem;
     }
 
+    /**
+     * @param {string|null} [profileId]
+     */
     navigateToEditPage(profileId = null) {
         if (profileId) {
             window.location.href = `profile-edit.html?id=${profileId}`;
@@ -324,10 +343,16 @@ class SettingsManager {
         }
     }
 
+    /**
+     * @param {string} profileId
+     */
     editProfile(profileId) {
         this.navigateToEditPage(profileId);
     }
 
+    /**
+     * @param {string} profileId
+     */
     async deleteProfile(profileId) {
         if (confirm('Are you sure you want to delete this profile?')) {
             this.profiles = this.profiles.filter(p => p.id !== profileId);
@@ -337,6 +362,9 @@ class SettingsManager {
         }
     }
 
+    /**
+     * @param {string} profileId
+     */
     cloneProfile(profileId) {
         const profile = this.profiles.find(p => p.id === profileId);
         if (profile) {
@@ -351,6 +379,9 @@ class SettingsManager {
         }
     }
 
+    /**
+     * @param {string} theme
+     */
     async handleThemeChange(theme) {
         const success = await handleThemeChange(theme);
         if (success) {
@@ -394,12 +425,16 @@ class SettingsManager {
 
     // Trigger file input for importing profiles
     importProfiles() {
-        document.getElementById('importFileInput').click();
+        /** @type {HTMLInputElement} */ (document.getElementById('importFileInput')).click();
     }
 
     // Handle file import
+    /**
+     * @param {Event} event
+     */
     async handleFileImport(event) {
-        const file = event.target.files[0];
+        const target = /** @type {HTMLInputElement} */ (event.target);
+        const file = target.files?.[0];
         if (!file) return;
 
         try {
@@ -455,13 +490,19 @@ class SettingsManager {
         }
 
         // Clear the file input
-        event.target.value = '';
+        target.value = '';
     }
 
     // Show status message
+    /**
+     * @param {string} message
+     * @param {string} [type]
+     */
     showStatus(message, type = 'info') {
         const statusMessage = document.getElementById('statusMessage');
         const statusText = document.getElementById('statusText');
+        
+        if (!statusMessage || !statusText) return;
         
         // Clear any existing timeout
         if (this.statusTimeout) {

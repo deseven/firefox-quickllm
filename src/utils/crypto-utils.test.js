@@ -44,7 +44,7 @@ describe('xorEncode / xorDecode', () => {
 describe('obfuscateApiKey', () => {
     it('prefixes the encoded value with the obfuscation marker', () => {
         const result = obfuscateApiKey('sk-secret');
-        expect(result.startsWith(OBFUSCATION_PREFIX)).toBe(true);
+        expect(/** @type {string} */ (result).startsWith(OBFUSCATION_PREFIX)).toBe(true);
     });
 
     it('passes null through unchanged', () => {
@@ -126,39 +126,39 @@ describe('obfuscateProfileApiKeys / deobfuscateProfileApiKeys', () => {
     });
 
     it('deobfuscates legacy plaintext keys unchanged', () => {
-        const legacy = [{ id: '1', apiKey: 'sk-legacy' }];
+        const legacy = /** @type {any} */ ([{ id: '1', apiKey: 'sk-legacy' }]);
         const result = deobfuscateProfileApiKeys(legacy);
         expect(result[0].apiKey).toBe('sk-legacy');
     });
 
     it('returns non-array input unchanged', () => {
-        expect(obfuscateProfileApiKeys(null)).toBeNull();
-        expect(deobfuscateProfileApiKeys(undefined)).toBeUndefined();
+        expect(obfuscateProfileApiKeys(/** @type {any} */ (null))).toBeNull();
+        expect(deobfuscateProfileApiKeys(/** @type {any} */ (undefined))).toBeUndefined();
     });
 });
 
 describe('profilesNeedMigration', () => {
     it('returns true when any profile has a legacy plaintext key', () => {
-        const profiles = [
+        const profiles = /** @type {any} */ ([
             { id: '1', apiKey: obfuscateApiKey('sk-ok') },
             { id: '2', apiKey: 'sk-legacy-plaintext' }
-        ];
+        ]);
         expect(profilesNeedMigration(profiles)).toBe(true);
     });
 
     it('returns false when all keys are already obfuscated', () => {
-        const profiles = [
+        const profiles = /** @type {any} */ ([
             { id: '1', apiKey: obfuscateApiKey('sk-one') },
             { id: '2', apiKey: obfuscateApiKey('sk-two') }
-        ];
+        ]);
         expect(profilesNeedMigration(profiles)).toBe(false);
     });
 
     it('returns false when all keys are null/undefined', () => {
-        const profiles = [
+        const profiles = /** @type {any} */ ([
             { id: '1', apiKey: null },
             { id: '2', apiKey: undefined }
-        ];
+        ]);
         expect(profilesNeedMigration(profiles)).toBe(false);
     });
 
@@ -167,14 +167,14 @@ describe('profilesNeedMigration', () => {
     });
 
     it('returns false for a mixed set where only null keys are unmigrated', () => {
-        const profiles = [
+        const profiles = /** @type {any} */ ([
             { id: '1', apiKey: obfuscateApiKey('sk-ok') },
             { id: '2', apiKey: null }
-        ];
+        ]);
         expect(profilesNeedMigration(profiles)).toBe(false);
     });
 
     it('returns false for non-array input', () => {
-        expect(profilesNeedMigration(null)).toBe(false);
+        expect(profilesNeedMigration(/** @type {any} */ (null))).toBe(false);
     });
 });

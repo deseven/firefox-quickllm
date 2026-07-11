@@ -6,7 +6,16 @@ import {
     validateProfiles,
     generateProfileId,
     loadProfiles,
-    saveProfiles
+    saveProfiles,
+    getProfileById,
+    addProfile,
+    updateProfile,
+    deleteProfile,
+    cloneProfile,
+    getProfilesResponse,
+    getThemeSetting,
+    saveThemeSetting,
+    getExtensionInfo
 } from './storage-utils.js';
 import { isObfuscatedKey, deobfuscateApiKey, obfuscateApiKey } from './crypto-utils.js';
 
@@ -151,7 +160,7 @@ describe('saveProfiles / loadProfiles obfuscation', () => {
     });
 
     it('saveProfiles notifies the background script on success', async () => {
-        await saveProfiles([{ id: '1', apiKey: 'sk-x' }]);
+        await saveProfiles([{ id: '1', name: 'A', type: 'openai', model: 'gpt-4', apiKey: 'sk-x' }]);
         expect(runtimeSend).toHaveBeenCalledWith({ type: 'profilesUpdated' });
     });
 
@@ -254,5 +263,319 @@ describe('loadProfiles legacy migration', () => {
         expect(isObfuscatedKey(migrated[0].apiKey)).toBe(true);
         expect(migrated[1].apiKey).toBe(obfuscated);
         expect(migrated[2].apiKey).toBeNull();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// cloneProfile
+// ---------------------------------------------------------------------------
+
+describe('cloneProfile', () => {
+    const baseProfile = {
+        id: 'profile_original',
+        name: 'Original',
+        type: 'openai',
+        model: 'gpt-4',
+        apiKey: 'sk-secret',
+        systemPrompt: 'You are helpful.',
+        endpoint: null,
+        extraOptions: null,
+        userPrompt: null,
+        processImmediately: false,
+        diffOutput: false
+    };
+
+    it('returns a new object with a different id', () => {
+        const clone = cloneProfile(baseProfile);
+        expect(clone.id).not.toBe(baseProfile.id);
+        expect(typeof clone.id).toBe('string');
+    });
+
+    it('appends the default suffix to the name', () => {
+        const clone = cloneProfile(baseProfile);
+        expect(clone.name).toBe('Original (clone)');
+    });
+
+    it('appends a custom suffix when provided', () => {
+        const clone = cloneProfile(baseProfile, ' (copy)');
+        expect(clone.name).toBe('Original (copy)');
+    });
+
+    it('preserves all other profile fields', () => {
+        const clone = cloneProfile(baseProfile);
+        expect(clone.type).toBe('openai');
+        expect(clone.model).toBe('gpt-4');
+        expect(clone.apiKey).toBe('sk-secret');
+        expect(clone.systemPrompt).toBe('You are helpful.');
+    });
+
+    it('does not mutate the original profile', () => {
+        const snapshot = { ...baseProfile };
+        cloneProfile(baseProfile);
+        expect(baseProfile).toEqual(snapshot);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// getProfileById
+// ---------------------------------------------------------------------------
+
+describe('getProfileById', () => {
+    const storageGet = vi.mocked(browser.storage.local.get);
+
+    beforeEach(() => {
+        storageGet.mockReset();
+    });
+
+    it('returns the profile matching the id', async () => {
+        const profiles = [
+            { id: '1', name: 'A', type: 'openai', model: 'gpt-4', apiKey: 'sk-a' },
+            { id: '2', name: 'B', type: 'ollama', model: 'llama3', apiKey: null }
+        ];
+        storageGet.mockResolvedValue({ profiles: profiles.map(p => ({
+            ...p,
+            apiKey: p.apiKey ? obfuscateApiKey(p.apiKey) : p.apiKey
+        })) });
+
+        const result = await getProfileById('2');
+        expect(result).not.toBeNull();
+        expect(result?.id).toBe('2');
+        expect(result?.name).toBe('B');
+    });
+
+    it('returns null when the profile is not found', async () => {
+        storageGet.mockResolvedValue({ profiles: [
+            { id: '1', apiKey: obfuscateApiKey('sk-a') }
+        ]});
+
+        const result = await getProfileById('nonexistent');
+        expect(result).toBeNull();
+    });
+
+    it('returns null when no profiles exist in storage', async () => {
+        storageGet.mockResolvedValue({});
+
+        const result = await getProfileById('1');
+        expect(result).toBeNull();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// addProfile
+// ---------------------------------------------------------------------------
+
+describe('addProfile', () => {
+    const storageGet = vi.mocked(browser.storage.local.get);
+    const storageSet = vi.mocked(browser.storage.local.set);
+    const runtimeSend = vi.mocked(browser.runtime.sendMessage);
+
+    beforeEach(() => {
+        storageGet.mockReset();
+        storageSet.mockReset();
+        runtimeSend.mockReset().mockResolvedValue(undefined);
+    });
+
+    it('appends the new profile to the existing list', async () => {
+        const existing = [
+            { id: '1', name: 'A', type: 'openai', model: 'gpt-4', apiKey: 'sk-a' }
+        ];
+        storageGet.mockResolvedValue({ profiles: existing.map(p => ({
+            ...p,
+            apiKey: obfuscateApiKey(/** @type {string} */ (p.apiKey))
+        })) });
+
+        const newProfile = { id: '2', name: 'B', type: 'ollama', model: 'llama3', apiKey: null };
+        const result = await addProfile(newProfile);
+
+        expect(result).toBe(true);
+        const stored = storageSet.mock.calls[0][0].profiles;
+        expect(stored).toHaveLength(2);
+        expect(stored[1].id).toBe('2');
+    });
+
+    it('obfuscates the new profile\'s API key before storing', async () => {
+        storageGet.mockResolvedValue({ profiles: [] });
+
+        const newProfile = { id: '1', name: 'A', type: 'openai', model: 'gpt-4', apiKey: 'sk-new' };
+        await addProfile(newProfile);
+
+        const stored = storageSet.mock.calls[0][0].profiles;
+        expect(isObfuscatedKey(stored[0].apiKey)).toBe(true);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// updateProfile
+// ---------------------------------------------------------------------------
+
+describe('updateProfile', () => {
+    const storageGet = vi.mocked(browser.storage.local.get);
+    const storageSet = vi.mocked(browser.storage.local.set);
+    const runtimeSend = vi.mocked(browser.runtime.sendMessage);
+
+    beforeEach(() => {
+        storageGet.mockReset();
+        storageSet.mockReset();
+        runtimeSend.mockReset().mockResolvedValue(undefined);
+    });
+
+    it('merges new data into the existing profile', async () => {
+        const existing = [
+            { id: '1', name: 'Old', type: 'openai', model: 'gpt-4', apiKey: 'sk-a' }
+        ];
+        storageGet.mockResolvedValue({ profiles: existing.map(p => ({
+            ...p,
+            apiKey: obfuscateApiKey(/** @type {string} */ (p.apiKey))
+        })) });
+
+        const result = await updateProfile('1', { name: 'New', model: 'gpt-4o' });
+
+        expect(result).toBe(true);
+        const stored = storageSet.mock.calls[0][0].profiles;
+        expect(stored[0].name).toBe('New');
+        expect(stored[0].model).toBe('gpt-4o');
+        // Untouched fields are preserved
+        expect(stored[0].type).toBe('openai');
+    });
+
+    it('returns false when the profile id is not found', async () => {
+        storageGet.mockResolvedValue({ profiles: [
+            { id: '1', apiKey: obfuscateApiKey('sk-a') }
+        ]});
+
+        const result = await updateProfile('nonexistent', { name: 'X' });
+        expect(result).toBe(false);
+        expect(storageSet).not.toHaveBeenCalled();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// deleteProfile
+// ---------------------------------------------------------------------------
+
+describe('deleteProfile', () => {
+    const storageGet = vi.mocked(browser.storage.local.get);
+    const storageSet = vi.mocked(browser.storage.local.set);
+    const runtimeSend = vi.mocked(browser.runtime.sendMessage);
+
+    beforeEach(() => {
+        storageGet.mockReset();
+        storageSet.mockReset();
+        runtimeSend.mockReset().mockResolvedValue(undefined);
+    });
+
+    it('removes the profile with the matching id', async () => {
+        const existing = [
+            { id: '1', name: 'A', type: 'openai', model: 'gpt-4', apiKey: 'sk-a' },
+            { id: '2', name: 'B', type: 'ollama', model: 'llama3', apiKey: null }
+        ];
+        storageGet.mockResolvedValue({ profiles: existing.map(p => ({
+            ...p,
+            apiKey: p.apiKey ? obfuscateApiKey(/** @type {string} */ (p.apiKey)) : p.apiKey
+        })) });
+
+        const result = await deleteProfile('1');
+
+        expect(result).toBe(true);
+        const stored = storageSet.mock.calls[0][0].profiles;
+        expect(stored).toHaveLength(1);
+        expect(stored[0].id).toBe('2');
+    });
+
+    it('returns false when the profile id is not found', async () => {
+        storageGet.mockResolvedValue({ profiles: [
+            { id: '1', apiKey: obfuscateApiKey('sk-a') }
+        ]});
+
+        const result = await deleteProfile('nonexistent');
+        expect(result).toBe(false);
+        expect(storageSet).not.toHaveBeenCalled();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// getProfilesResponse
+// ---------------------------------------------------------------------------
+
+describe('getProfilesResponse', () => {
+    const storageGet = vi.mocked(browser.storage.local.get);
+
+    beforeEach(() => {
+        storageGet.mockReset();
+    });
+
+    it('returns profiles with null error on success', async () => {
+        const profiles = [
+            { id: '1', name: 'A', type: 'openai', model: 'gpt-4', apiKey: 'sk-a' }
+        ];
+        storageGet.mockResolvedValue({ profiles: profiles.map(p => ({
+            ...p,
+            apiKey: obfuscateApiKey(/** @type {string} */ (p.apiKey))
+        })) });
+
+        const result = await getProfilesResponse();
+        expect(result.error).toBeNull();
+        expect(result.profiles).toHaveLength(1);
+        expect(result.profiles[0].name).toBe('A');
+    });
+
+    it('returns an empty array when storage fails (loadProfiles swallows the error)', async () => {
+        // loadProfiles has its own try/catch that returns [] on storage
+        // errors, so getProfilesResponse receives an empty array with no
+        // error rather than propagating the storage failure.
+        storageGet.mockRejectedValue(new Error('storage exploded'));
+
+        const result = await getProfilesResponse();
+        expect(result.profiles).toEqual([]);
+        expect(result.error).toBeNull();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// getThemeSetting / saveThemeSetting
+// ---------------------------------------------------------------------------
+
+describe('getThemeSetting', () => {
+    const storageGet = vi.mocked(browser.storage.local.get);
+
+    beforeEach(() => {
+        storageGet.mockReset();
+    });
+
+    it('returns the stored theme setting', async () => {
+        storageGet.mockResolvedValue({ themeSetting: 'dark' });
+        expect(await getThemeSetting()).toBe('dark');
+    });
+
+    it('defaults to "auto" when no setting is stored', async () => {
+        storageGet.mockResolvedValue({});
+        expect(await getThemeSetting()).toBe('auto');
+    });
+});
+
+describe('saveThemeSetting', () => {
+    const storageSet = vi.mocked(browser.storage.local.set);
+
+    beforeEach(() => {
+        storageSet.mockReset();
+    });
+
+    it('writes the theme setting to storage', async () => {
+        const result = await saveThemeSetting('light');
+        expect(result).toBe(true);
+        expect(storageSet).toHaveBeenCalledWith({ themeSetting: 'light' });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// getExtensionInfo
+// ---------------------------------------------------------------------------
+
+describe('getExtensionInfo', () => {
+    it('returns manifest data when available', () => {
+        const result = getExtensionInfo();
+        expect(result).toHaveProperty('name');
+        expect(result).toHaveProperty('version');
+        expect(result).toHaveProperty('description');
     });
 });

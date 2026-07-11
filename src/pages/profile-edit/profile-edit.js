@@ -6,6 +6,55 @@ import { escapeHtml, clearElement } from '../../utils/dom-utils.js';
 import { loadProfiles, saveProfiles, generateProfileId } from '../../utils/storage-utils.js';
 import { PROVIDER_METADATA, getProviderTypeList } from '../../core/providers/provider-types.js';
 
+/**
+ * @typedef {import('../../content/types.js').Profile} Profile
+ */
+
+/**
+ * Get a form element by ID, cast to HTMLInputElement.
+ * @param {string} id
+ * @returns {HTMLInputElement}
+ */
+function getInput(id) {
+    return /** @type {HTMLInputElement} */ (document.getElementById(id));
+}
+
+/**
+ * Get a textarea element by ID, cast to HTMLTextAreaElement.
+ * @param {string} id
+ * @returns {HTMLTextAreaElement}
+ */
+function getTextArea(id) {
+    return /** @type {HTMLTextAreaElement} */ (document.getElementById(id));
+}
+
+/**
+ * Get a select element by ID, cast to HTMLSelectElement.
+ * @param {string} id
+ * @returns {HTMLSelectElement}
+ */
+function getSelect(id) {
+    return /** @type {HTMLSelectElement} */ (document.getElementById(id));
+}
+
+/**
+ * Get a form element by ID, cast to HTMLFormElement.
+ * @param {string} id
+ * @returns {HTMLFormElement}
+ */
+function getForm(id) {
+    return /** @type {HTMLFormElement} */ (document.getElementById(id));
+}
+
+/**
+ * Get a button element by ID, cast to HTMLButtonElement.
+ * @param {string} id
+ * @returns {HTMLButtonElement}
+ */
+function getButton(id) {
+    return /** @type {HTMLButtonElement} */ (document.getElementById(id));
+}
+
 class ProfileEditor {
     constructor() {
         this.profileId = null;
@@ -28,7 +77,7 @@ class ProfileEditor {
      * duplicating the list in HTML.
      */
     populateProviderTypes() {
-        const select = document.getElementById('profileType');
+        const select = getSelect('profileType');
         // Preserve the placeholder option
         const placeholder = select.querySelector('option[value=""]');
         clearElement(select);
@@ -36,7 +85,7 @@ class ProfileEditor {
             select.appendChild(placeholder);
         }
         for (const type of getProviderTypeList()) {
-            const meta = PROVIDER_METADATA[type];
+            const meta = /** @type {any} */ (PROVIDER_METADATA)[type];
             const option = document.createElement('option');
             option.value = type;
             option.textContent = meta ? meta.label : type;
@@ -46,18 +95,18 @@ class ProfileEditor {
 
     setupEventListeners() {
         // Cancel button
-        document.getElementById('cancelBtn').addEventListener('click', () => {
+        getButton('cancelBtn').addEventListener('click', () => {
             this.goBack();
         });
 
         // Form submission
-        document.getElementById('profileForm').addEventListener('submit', (e) => {
+        getForm('profileForm').addEventListener('submit', (e) => {
             e.preventDefault();
             this.saveProfile();
         });
 
         // Prompt template button
-        document.getElementById('promptTemplateBtn').addEventListener('click', (e) => {
+        getButton('promptTemplateBtn').addEventListener('click', (e) => {
             e.preventDefault();
             this.togglePromptTemplateDropdown();
         });
@@ -66,21 +115,22 @@ class ProfileEditor {
         document.addEventListener('click', (e) => {
             const dropdown = document.getElementById('promptTemplateDropdown');
             const button = document.getElementById('promptTemplateBtn');
-            if (!dropdown.contains(e.target) && !button.contains(e.target)) {
+            if (dropdown && button && !dropdown.contains(/** @type {Node} */ (e.target)) && !button.contains(/** @type {Node} */ (e.target))) {
                 dropdown.classList.remove('show');
             }
         });
 
         // Mode switch toggle
-        document.getElementById('advancedModeToggle').addEventListener('change', (e) => {
-            this.toggleMode(e.target.checked);
+        getInput('advancedModeToggle').addEventListener('change', (e) => {
+            this.toggleMode(/** @type {HTMLInputElement} */ (e.target).checked);
         });
     }
 
 
     setupPromptTemplateDropdown() {
         const dropdown = document.getElementById('promptTemplateDropdown');
-        
+        if (!dropdown) return;
+
         // Clear existing content using utility function
         clearElement(dropdown);
         
@@ -93,7 +143,8 @@ class ProfileEditor {
             
             // Add click listener
             templateItem.addEventListener('click', (e) => {
-                const templateName = e.currentTarget.getAttribute('data-template-name');
+                const target = /** @type {HTMLElement} */ (e.currentTarget);
+                const templateName = target.getAttribute('data-template-name') || '';
                 this.selectPromptTemplate(templateName);
             });
             
@@ -103,24 +154,31 @@ class ProfileEditor {
 
     togglePromptTemplateDropdown() {
         const dropdown = document.getElementById('promptTemplateDropdown');
-        const button = document.getElementById('promptTemplateBtn');
-        
+        const button = getButton('promptTemplateBtn');
+
+        if (!dropdown) return;
         // Don't show dropdown if button is disabled
         if (button.disabled) {
             return;
         }
-        
+
         dropdown.classList.toggle('show');
     }
 
+    /**
+     * @param {string} templateName
+     */
     selectPromptTemplate(templateName) {
         const template = PROMPT_TEMPLATES.find(t => t.name === templateName);
         if (template) {
-            const systemPromptTextarea = document.getElementById('systemPrompt');
+            const systemPromptTextarea = getTextArea('systemPrompt');
             systemPromptTextarea.value = template.prompt;
-            
+
             // Close dropdown
-            document.getElementById('promptTemplateDropdown').classList.remove('show');
+            const dropdown = document.getElementById('promptTemplateDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('show');
+            }
         }
     }
 
@@ -129,14 +187,20 @@ class ProfileEditor {
         this.setMode(false);
     }
 
+    /**
+     * @param {boolean} isAdvanced
+     */
     toggleMode(isAdvanced) {
         this.isAdvancedMode = isAdvanced;
         this.setMode(isAdvanced);
     }
 
+    /**
+     * @param {boolean} isAdvanced
+     */
     setMode(isAdvanced) {
-        const form = document.getElementById('profileForm');
-        const toggle = document.getElementById('advancedModeToggle');
+        const form = getForm('profileForm');
+        const toggle = getInput('advancedModeToggle');
         const labels = document.querySelectorAll('.mode-label');
         
         if (isAdvanced) {
@@ -156,9 +220,9 @@ class ProfileEditor {
 
     detectAdvancedMode() {
         // Check if any advanced fields have values
-        const customEndpoint = document.getElementById('apiEndpoint').value.trim();
-        const userPrompt = document.getElementById('userPrompt').value.trim();
-        const extraOptions = document.getElementById('extraOptions').value.trim();
+        const customEndpoint = getInput('apiEndpoint').value.trim();
+        const userPrompt = getInput('userPrompt').value.trim();
+        const extraOptions = getTextArea('extraOptions').value.trim();
         
         return customEndpoint || userPrompt || extraOptions;
     }
@@ -183,6 +247,10 @@ class ProfileEditor {
         }
     }
 
+    /**
+     * Load a profile from storage and populate the form.
+     * @param {string} profileId
+     */
     async loadProfile(profileId) {
         this.showLoading(true);
         
@@ -193,22 +261,7 @@ class ProfileEditor {
             const profile = profiles.find(p => p.id === profileId);
             
             if (profile) {
-                // Populate form
-                document.getElementById('profileId').value = profile.id;
-                document.getElementById('profileName').value = profile.name;
-                document.getElementById('profileType').value = profile.type;
-                document.getElementById('apiEndpoint').value = profile.endpoint || '';
-                document.getElementById('apiKey').value = profile.apiKey;
-                document.getElementById('modelName').value = profile.model;
-                document.getElementById('extraOptions').value = profile.extraOptions || '';
-                document.getElementById('systemPrompt').value = profile.systemPrompt || '';
-                document.getElementById('userPrompt').value = profile.userPrompt || '';
-                document.getElementById('processImmediately').checked = profile.processImmediately || false;
-                document.getElementById('diffOutput').checked = profile.diffOutput || false;
-                
-                // Automatically switch to advanced mode if any advanced fields have values
-                const shouldBeAdvanced = this.detectAdvancedMode();
-                this.setMode(shouldBeAdvanced);
+                this.populateForm(profile);
             } else {
                 this.showError('Profile not found');
                 setTimeout(() => this.goBack(), 2000);
@@ -221,33 +274,46 @@ class ProfileEditor {
         }
     }
 
-    loadCloneData(profile) {
-        // Populate form with clone data (similar to loadProfile but without loading from storage)
-        document.getElementById('profileId').value = ''; // Clear ID for new profile
-        document.getElementById('profileName').value = profile.name;
-        document.getElementById('profileType').value = profile.type;
-        document.getElementById('apiEndpoint').value = profile.endpoint || '';
-        document.getElementById('apiKey').value = profile.apiKey;
-        document.getElementById('modelName').value = profile.model;
-        document.getElementById('extraOptions').value = profile.extraOptions || '';
-        document.getElementById('systemPrompt').value = profile.systemPrompt || '';
-        document.getElementById('userPrompt').value = profile.userPrompt || '';
-        document.getElementById('processImmediately').checked = profile.processImmediately || false;
-        document.getElementById('diffOutput').checked = profile.diffOutput || false;
+    /**
+     * Populate the form fields from a profile object.
+     * @param {Profile} profile
+     */
+    populateForm(profile) {
+        getInput('profileId').value = profile.id;
+        getInput('profileName').value = profile.name;
+        getSelect('profileType').value = profile.type;
+        getInput('apiEndpoint').value = profile.endpoint || '';
+        getInput('apiKey').value = profile.apiKey || '';
+        getInput('modelName').value = profile.model;
+        getTextArea('extraOptions').value = profile.extraOptions || '';
+        getTextArea('systemPrompt').value = profile.systemPrompt || '';
+        getTextArea('userPrompt').value = profile.userPrompt || '';
+        getInput('processImmediately').checked = profile.processImmediately || false;
+        getInput('diffOutput').checked = profile.diffOutput || false;
         
         // Automatically switch to advanced mode if any advanced fields have values
-        const shouldBeAdvanced = this.detectAdvancedMode();
+        const shouldBeAdvanced = !!this.detectAdvancedMode();
         this.setMode(shouldBeAdvanced);
+    }
+
+    /**
+     * Populate the form with clone data (without loading from storage).
+     * @param {Profile} profile
+     */
+    loadCloneData(profile) {
+        // Clear ID for new profile
+        getInput('profileId').value = '';
+        this.populateForm(profile);
         
         // This is a new profile (clone), so clear the profileId
         this.profileId = null;
     }
 
     async saveProfile() {
-        const form = document.getElementById('profileForm');
+        const form = getForm('profileForm');
         const formData = new FormData(form);
         
-        const extraOptionsText = (formData.get('extraOptions') || '').trim();
+        const extraOptionsText = (/** @type {string} */ (formData.get('extraOptions')) || '').trim();
         
         // Validate JSON if extra options are provided
         let extraOptions = null;
@@ -260,17 +326,19 @@ class ProfileEditor {
             }
         }
         
+        /** @type {Profile} */
         const profileData = {
-            name: formData.get('profileName').trim(),
-            type: formData.get('profileType'),
-            endpoint: formData.get('apiEndpoint').trim() || null,
-            apiKey: formData.get('apiKey').trim() || null,
-            model: formData.get('modelName').trim(),
+            id: this.profileId || generateProfileId(),
+            name: /** @type {string} */ (formData.get('profileName')).trim(),
+            type: /** @type {string} */ (formData.get('profileType')),
+            endpoint: /** @type {string} */ (formData.get('apiEndpoint')).trim() || null,
+            apiKey: /** @type {string} */ (formData.get('apiKey')).trim() || null,
+            model: /** @type {string} */ (formData.get('modelName')).trim(),
             extraOptions: extraOptionsText || null,
-            systemPrompt: (formData.get('systemPrompt') || '').trim(),
-            userPrompt: (formData.get('userPrompt') || '').trim() || null,
-            processImmediately: document.getElementById('processImmediately').checked,
-            diffOutput: document.getElementById('diffOutput').checked
+            systemPrompt: (/** @type {string} */ (formData.get('systemPrompt')) || '').trim(),
+            userPrompt: (/** @type {string} */ (formData.get('userPrompt')) || '').trim() || null,
+            processImmediately: getInput('processImmediately').checked,
+            diffOutput: getInput('diffOutput').checked
         };
 
         // Validation
@@ -296,7 +364,6 @@ class ProfileEditor {
                 }
             } else {
                 // Add new profile
-                profileData.id = generateProfileId();
                 profiles.push(profileData);
             }
 
@@ -315,6 +382,9 @@ class ProfileEditor {
         }
     }
 
+    /**
+     * @param {boolean|null} [isEdit]
+     */
     goBack(isEdit = null) {
         // Navigate back to settings page with Profiles tab active
         // Pass notification type if profile was saved
@@ -328,15 +398,23 @@ class ProfileEditor {
         }
     }
 
+    /**
+     * @param {boolean} show
+     */
     showLoading(show) {
         const loadingState = document.getElementById('loadingState');
-        if (show) {
-            loadingState.classList.remove('d-none');
-        } else {
-            loadingState.classList.add('d-none');
+        if (loadingState) {
+            if (show) {
+                loadingState.classList.remove('d-none');
+            } else {
+                loadingState.classList.add('d-none');
+            }
         }
     }
 
+    /**
+     * @param {string} message
+     */
     showError(message) {
         // Simple alert for now - could be enhanced with a toast notification
         alert(message);

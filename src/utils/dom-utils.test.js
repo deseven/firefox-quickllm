@@ -46,7 +46,7 @@ describe('escapeHtml', () => {
     });
 
     it('coerces non-string input to a string', () => {
-        expect(escapeHtml(42)).toBe('42');
+        expect(escapeHtml(/** @type {any} */ (42))).toBe('42');
     });
 
     it('escapes a string that already contains entities (raw ampersand is escaped)', () => {

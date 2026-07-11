@@ -9,8 +9,14 @@ import {
 import { createProfilesUpdatedMessage } from '../core/messages.js';
 
 /**
+ * A configured LLM profile. Re-exported here so modules importing from
+ * storage-utils can reference the profile shape.
+ * @typedef {import('../content/types.js').Profile} Profile
+ */
+
+/**
  * Get data from browser storage with error handling
- * @param {string|Array|Object} keys - Storage keys to retrieve
+ * @param {string|string[]|Object} keys - Storage keys to retrieve
  * @returns {Promise<Object>} Storage data
  */
 export async function getStorageData(keys) {
@@ -39,12 +45,12 @@ export async function setStorageData(data) {
 
 /**
  * Load profiles from browser storage
- * @returns {Promise<Array>} Array of profiles
+ * @returns {Promise<Profile[]>} Array of profiles
  */
 export async function loadProfiles() {
     try {
         const result = await getStorageData('profiles');
-        const rawProfiles = result.profiles || [];
+        const rawProfiles = /** @type {any} */ (result).profiles || [];
 
         // Deobfuscate API keys for in-memory use. Profiles saved after the
         // §3.1 security work carry an `enc:v1:` prefix; legacy plaintext keys
@@ -66,7 +72,7 @@ export async function loadProfiles() {
 
 /**
  * Save profiles to browser storage and notify background script
- * @param {Array} profiles - Array of profiles to save
+ * @param {Profile[]} profiles - Array of profiles to save
  * @returns {Promise<boolean>} Success status
  */
 export async function saveProfiles(profiles) {
@@ -89,7 +95,7 @@ export async function saveProfiles(profiles) {
 /**
  * Get a specific profile by ID
  * @param {string} profileId - Profile ID to find
- * @returns {Promise<Object|null>} Profile object or null if not found
+ * @returns {Promise<Profile|null>} Profile object or null if not found
  */
 export async function getProfileById(profileId) {
     const profiles = await loadProfiles();
@@ -98,7 +104,7 @@ export async function getProfileById(profileId) {
 
 /**
  * Add a new profile
- * @param {Object} profileData - Profile data to add
+ * @param {Profile} profileData - Profile data to add
  * @returns {Promise<boolean>} Success status
  */
 export async function addProfile(profileData) {
@@ -110,7 +116,7 @@ export async function addProfile(profileData) {
 /**
  * Update an existing profile
  * @param {string} profileId - Profile ID to update
- * @param {Object} profileData - New profile data
+ * @param {Partial<Profile>} profileData - New profile data (merged into existing)
  * @returns {Promise<boolean>} Success status
  */
 export async function updateProfile(profileId, profileData) {
@@ -148,7 +154,7 @@ export async function deleteProfile(profileId) {
 export async function getThemeSetting() {
     try {
         const result = await getStorageData('themeSetting');
-        return result.themeSetting || 'auto';
+        return /** @type {any} */ (result).themeSetting || 'auto';
     } catch (error) {
         console.error('Error loading theme setting:', error);
         return 'auto';
@@ -185,7 +191,7 @@ export async function sendRuntimeMessage(message) {
 
 /**
  * Get profiles with error handling and response format
- * @returns {Promise<Object>} Response object with profiles array and optional error
+ * @returns {Promise<{ profiles: Profile[], error: string|null }>} Response object with profiles array and optional error
  */
 export async function getProfilesResponse() {
     try {
@@ -193,14 +199,14 @@ export async function getProfilesResponse() {
         return { profiles, error: null };
     } catch (error) {
         console.error('Error getting profiles:', error);
-        return { profiles: [], error: error.message };
+        return { profiles: [], error: /** @type {Error} */ (error).message };
     }
 }
 
 /**
  * Validate profile data structure
- * @param {Object} profile - Profile to validate
- * @returns {boolean} True if valid
+ * @param {*} profile - Profile to validate
+ * @returns {profile is Profile} True if valid
  */
 export function validateProfile(profile) {
     return profile &&
@@ -213,8 +219,8 @@ export function validateProfile(profile) {
 
 /**
  * Validate array of profiles
- * @param {Array} profiles - Profiles array to validate
- * @returns {boolean} True if all profiles are valid
+ * @param {*} profiles - Profiles array to validate
+ * @returns {profiles is Profile[]} True if all profiles are valid
  */
 export function validateProfiles(profiles) {
     return Array.isArray(profiles) && profiles.every(validateProfile);
@@ -230,9 +236,9 @@ export function generateProfileId() {
 
 /**
  * Clone a profile with a new ID and modified name
- * @param {Object} profile - Profile to clone
- * @param {string} nameSuffix - Suffix to add to name (default: ' (clone)')
- * @returns {Object} Cloned profile
+ * @param {Profile} profile - Profile to clone
+ * @param {string} [nameSuffix] - Suffix to add to name (default: ' (clone)')
+ * @returns {Profile} Cloned profile
  */
 export function cloneProfile(profile, nameSuffix = ' (clone)') {
     return {
@@ -244,7 +250,7 @@ export function cloneProfile(profile, nameSuffix = ' (clone)') {
 
 /**
  * Get extension manifest information
- * @returns {Object} Manifest data or fallback values
+ * @returns {{ name: string, version: string, description: string }} Manifest data or fallback values
  */
 export function getExtensionInfo() {
     try {

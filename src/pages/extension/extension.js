@@ -8,10 +8,15 @@ import { clearElement } from '../../utils/dom-utils.js';
 import { getProfileIcon, getProfileModelText } from '../../utils/profile-ui-utils.js';
 import { createProcessContentMessage } from '../../core/messages.js';
 
+/**
+ * @typedef {import('../../content/types.js').Profile} Profile
+ */
+
 // Make bootstrap available globally for the HTML
 window.bootstrap = bootstrap;
 class ProfileManager {
     constructor() {
+        /** @type {Profile[]} */
         this.profiles = [];
         this.init();
     }
@@ -25,17 +30,17 @@ class ProfileManager {
 
     setupEventListeners() {
         // Add profile button - go directly to profile creation
-        document.getElementById('addFirstProfileBtn').addEventListener('click', () => {
+        document.getElementById('addFirstProfileBtn')?.addEventListener('click', () => {
             this.navigateToProfileEditPage();
         });
 
         // Settings button
-        document.getElementById('settingsBtn').addEventListener('click', () => {
+        document.getElementById('settingsBtn')?.addEventListener('click', () => {
             this.navigateToSettingsPage();
         });
 
         // Help button
-        document.getElementById('helpBtn').addEventListener('click', () => {
+        document.getElementById('helpBtn')?.addEventListener('click', () => {
             this.navigateToHelpPage();
         });
     }
@@ -44,6 +49,8 @@ class ProfileManager {
         const profilesList = document.getElementById('profilesList');
         const emptyState = document.getElementById('emptyState');
         const loadingState = document.getElementById('loadingState');
+
+        if (!profilesList || !emptyState || !loadingState) return;
 
         // Hide loading state
         loadingState.classList.add('d-none');
@@ -64,6 +71,9 @@ class ProfileManager {
         });
     }
 
+    /**
+     * @param {Profile} profile
+     */
     createProfileElement(profile) {
         // Create main profile item container - clickable
         const profileItem = document.createElement('div');
@@ -110,6 +120,9 @@ class ProfileManager {
         return profileItem;
     }
 
+    /**
+     * @param {Profile} profile
+     */
     async triggerProcessing(profile) {
         // Send message to active tab to trigger processing with this profile
         try {

@@ -21,6 +21,21 @@ import {
     MESSAGE_VALIDATORS
 } from './messages.js';
 
+/**
+ * Build a minimal valid Profile for test fixtures.
+ * @returns {import('../content/types.js').Profile}
+ */
+function makeProfile(overrides = {}) {
+    return {
+        id: '1',
+        name: 'Test',
+        type: 'openai',
+        model: 'gpt-4',
+        apiKey: 'sk-test',
+        ...overrides
+    };
+}
+
 describe('MESSAGE_TYPES', () => {
     it('is frozen', () => {
         expect(Object.isFrozen(MESSAGE_TYPES)).toBe(true);
@@ -55,7 +70,7 @@ describe('factory functions', () => {
     });
 
     it('createProcessWithLLMMessage builds the full payload', () => {
-        const profile = { id: '1', type: 'openai' };
+        const profile = makeProfile();
         const message = createProcessWithLLMMessage(profile, 'prompt', 'text', true, 's1');
         expect(message).toEqual({
             type: 'processWithLLM',
@@ -81,7 +96,7 @@ describe('factory functions', () => {
 
     it('createProcessContentMessage omits profileId when null', () => {
         expect(createProcessContentMessage()).toEqual({ type: 'processContent' });
-        expect(createProcessContentMessage(null)).toEqual({ type: 'processContent' });
+        expect(createProcessContentMessage(/** @type {null} */ (null))).toEqual({ type: 'processContent' });
     });
 
     it('createProcessContentMessage includes profileId when provided', () => {
@@ -137,7 +152,7 @@ describe('assertMessage', () => {
 
     it('returns the type for a valid processWithLLM message', () => {
         const message = createProcessWithLLMMessage(
-            { id: '1' }, 'prompt', 'text', false, 's1'
+            makeProfile(), 'prompt', 'text', false, 's1'
         );
         expect(assertMessage(message)).toBe('processWithLLM');
     });
@@ -190,7 +205,7 @@ describe('assertMessage', () => {
 });
 
 describe('assertMessage — processWithLLM validation', () => {
-    const validProfile = { id: '1', type: 'openai' };
+    const validProfile = makeProfile();
 
     it('throws when profile is missing', () => {
         const message = { type: 'processWithLLM', userPrompt: 'p', text: 't', isStreaming: true, streamId: 's1' };
