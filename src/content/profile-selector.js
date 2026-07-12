@@ -189,17 +189,12 @@ export async function showProfileSelector(profiles, text, textType, onSelect, on
     let selectionMade = false;
     const selectProfile = (bypassProcessImmediately = false) => {
         // Guard against duplicate selection: Enter can fire multiple times
-        // before the keydown listener is removed, which would open the
-        // prompt modal repeatedly.
+        // before the modal is destroyed, which would open the prompt modal
+        // repeatedly.
         if (selectionMade) return;
         selectionMade = true;
 
         const selectedProfile = profiles[selectedIndex];
-        // Remove the custom keydown handler before destroying the modal,
-        // otherwise leftover Enter events carry over into the next modal.
-        if (handleKeyDown) {
-            document.removeEventListener('keydown', handleKeyDown);
-        }
         modal.destroy();
         onSelect(selectedProfile, bypassProcessImmediately);
     };
@@ -213,7 +208,9 @@ export async function showProfileSelector(profiles, text, textType, onSelect, on
         });
     });
 
-    // Keyboard navigation
+    // Keyboard navigation — registered via the modal's keyboard isolation
+    // layer so that only our hotkeys work while the modal is active and the
+    // host page's keyboard handlers are completely blocked.
     const handleKeyDown = (/** @type {KeyboardEvent} */ e) => {
         const result = resolveProfileSelectorAction(e, selectedIndex, profiles.length);
         if (result.action === null) return;
@@ -232,16 +229,12 @@ export async function showProfileSelector(profiles, text, textType, onSelect, on
         } else if (result.action === 'cancel') {
             if (selectionMade) return;
             selectionMade = true;
-            document.removeEventListener('keydown', handleKeyDown);
             modal.destroy();
             onCancel();
         }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    // Keep a reference so the controller's closeModal() can clean up the
-    // handler if the modal is closed externally (e.g. via the close button).
-    /** @type {any} */ (modal)._keydownHandler = handleKeyDown;
+    modal.setKeyHandler(handleKeyDown);
 
     // Initialize selection
     updateSelection();

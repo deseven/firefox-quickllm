@@ -7,9 +7,14 @@ class ShadowModal {
     constructor() {
         this.shadowHost = null;
         this.shadowRoot = null;
-        this.keydownHandler = null;
-        this.hotkeyBlocker = null;
+        /** @type {((e: KeyboardEvent) => void)|null} */
+        this.keyHandler = null;
         this.cssContent = null;
+        /** @type {EventListener|null} */
+        this.windowCaptureHandler = null;
+        /** @type {EventListener|null} */
+        this.shadowHostBubbleHandler = null;
+        this.originalPointerEvents = undefined;
     }
 
     /**
@@ -79,14 +84,15 @@ class ShadowModal {
         // Add to document
         document.body.appendChild(this.shadowHost);
 
-        // Setup close handlers
+        // Setup close handlers (registers default Escape key handler)
         this.setupCloseHandlers(modalContainer, onClose);
 
-        // Setup hotkey blocking
-        this.setupHotkeyBlocking();
+        // Setup mouse blocking (prevents interaction with page behind modal)
+        this.setupMouseBlocking();
 
-        // Setup event isolation within shadow DOM
-        this.setupEventIsolation();
+        // Setup keyboard isolation (intercepts all keyboard events so only
+        // our hotkeys work while the modal is active)
+        this.setupKeyboardIsolation();
 
         return {
             shadowRoot: this.shadowRoot,
@@ -110,97 +116,168 @@ class ShadowModal {
             });
         }
 
-        // Escape key handler
-        this.keydownHandler = (/** @type {KeyboardEvent} */ e) => {
+        // Default key handler: Escape to close. This can be overridden
+        // via setKeyHandler() for modals that need more complex handling.
+        this.keyHandler = (/** @type {KeyboardEvent} */ e) => {
             if (e.key === 'Escape') {
                 e.preventDefault();
                 if (onClose) onClose();
                 this.destroy();
             }
         };
-
-        document.addEventListener('keydown', this.keydownHandler);
     }
 
     /**
-     * Setup hotkey blocking by temporarily disabling the document body
-     * This prevents host page hotkeys from firing while modal is active
+     * Setup mouse blocking by disabling pointer events on the document body.
+     * This prevents the user from interacting with the page behind the modal.
      */
-    setupHotkeyBlocking() {
-        // Store original tabindex and set body to not focusable
-        this.originalBodyTabIndex = document.body.tabIndex;
-        document.body.tabIndex = -1;
-        
-        // Store original pointer events style specifically
+    setupMouseBlocking() {
         this.originalPointerEvents = document.body.style.pointerEvents;
         document.body.style.pointerEvents = 'none';
     }
 
     /**
-     * Remove hotkey blocking by restoring document body
+     * Remove mouse blocking by restoring the document body's pointer events.
      */
-    removeHotkeyBlocking() {
-        // Restore original pointer events style
+    removeMouseBlocking() {
         if (this.originalPointerEvents !== undefined) {
             document.body.style.pointerEvents = this.originalPointerEvents;
         } else {
-            // If there was no original style, remove the property entirely
             document.body.style.removeProperty('pointer-events');
-        }
-        
-        // Restore original tab index
-        if (this.originalBodyTabIndex !== undefined) {
-            document.body.tabIndex = this.originalBodyTabIndex;
-        } else {
-            // Remove tabIndex attribute if it wasn't originally set
-            document.body.removeAttribute('tabindex');
         }
     }
 
     /**
-     * Setup event isolation within the shadow DOM
+     * Setup keyboard isolation so that only our hotkeys work while the modal
+     * is active, and the host page's keyboard handlers are completely blocked.
+     *
+     * This uses two layers:
+     *
+     * 1. A **capture-phase** listener on `window` that intercepts every
+     *    keyboard event before it reaches the page's own listeners. Events
+     *    that originate from outside our Shadow DOM (i.e. from the host page)
+     *    are routed to our key handler and then cancelled — the page never
+     *    sees them.
+     *
+     * 2. A **bubble-phase** listener on the shadow host that catches events
+     *    originating inside the Shadow DOM (after they've been handled by the
+     *    target element, e.g. a textarea), routes them to our key handler,
+     *    and stops them from bubbling out to the host page's document/window
+     *    listeners.
+     *
+     * Together these guarantee that:
+     *   - Page hotkeys (arrows, Enter, Escape, etc.) do NOT fire while the
+     *     modal is open.
+     *   - Our own hotkeys DO fire.
+     *   - Regular typing inside the modal's textarea/inputs still works.
+     *   - When the modal is destroyed, all listeners are removed and the
+     *     page's keyboard functionality is fully restored.
      */
-    setupEventIsolation() {
-        if (!this.shadowRoot) return;
+    setupKeyboardIsolation() {
+        const keyboardEvents = /** @type {any[]} */ (['keydown', 'keyup', 'keypress']);
 
-        // Add event listeners to all input elements within shadow DOM
-        const inputs = this.shadowRoot.querySelectorAll('input, textarea, select, button');
-        inputs.forEach(input => {
-            // Prevent events from bubbling out of shadow DOM
-            input.addEventListener('keydown', (e) => {
-                e.stopPropagation();
-            });
-            input.addEventListener('keyup', (e) => {
-                e.stopPropagation();
-            });
-            input.addEventListener('keypress', (e) => {
-                e.stopPropagation();
-            });
+        // 1. Window capture-phase listener — the outermost gatekeeper.
+        this.windowCaptureHandler = /** @type {EventListener} */ ((e) => {
+            if (!this.shadowHost || !this.shadowHost.isConnected) return;
+
+            const fromOurModal = e.composedPath().includes(this.shadowHost);
+
+            if (!fromOurModal) {
+                // Event originated from the host page, not our modal.
+                // Route only 'keydown' to our handler (matching the original
+                // behaviour where only keydown was listened to), then block
+                // all keyboard event types so the page's own listeners never
+                // see them.
+                if (e.type === 'keydown' && this.keyHandler) {
+                    this.keyHandler(/** @type {KeyboardEvent} */ (e));
+                }
+                e.stopImmediatePropagation();
+                e.preventDefault();
+            }
+            // If the event came from inside our Shadow DOM, let it pass
+            // through to the target element (textarea, input, etc.) so that
+            // normal typing works. The shadowHost bubble handler below will
+            // route it to our key handler and stop it from leaking out.
         });
 
-        // Also add a general event listener to the shadow root to catch any events
-        this.shadowRoot.addEventListener('keydown', (e) => {
-            e.stopPropagation();
+        // 2. Shadow host bubble-phase listener — catches events that
+        //    originated inside the Shadow DOM after they've been handled by
+        //    the target element.
+        this.shadowHostBubbleHandler = /** @type {EventListener} */ ((e) => {
+            // Route only 'keydown' to our handler so that a single key press
+            // doesn't trigger the handler multiple times (keydown + keyup +
+            // keypress).
+            if (e.type === 'keydown' && this.keyHandler) {
+                this.keyHandler(/** @type {KeyboardEvent} */ (e));
+            }
+            // Stop the event from bubbling out to the host page's
+            // document/window listeners.
+            e.stopImmediatePropagation();
         });
-        this.shadowRoot.addEventListener('keyup', (e) => {
-            e.stopPropagation();
+
+        const captureHandler = this.windowCaptureHandler;
+        const bubbleHandler = this.shadowHostBubbleHandler;
+        const host = this.shadowHost;
+        keyboardEvents.forEach(evt => {
+            if (captureHandler) {
+                window.addEventListener(evt, captureHandler, true);
+            }
+            if (host && bubbleHandler) {
+                host.addEventListener(evt, bubbleHandler, false);
+            }
         });
-        this.shadowRoot.addEventListener('keypress', (e) => {
-            e.stopPropagation();
-        });
+    }
+
+    /**
+     * Remove keyboard isolation listeners, restoring the page's keyboard
+     * functionality.
+     */
+    removeKeyboardIsolation() {
+        const keyboardEvents = /** @type {any[]} */ (['keydown', 'keyup', 'keypress']);
+
+        if (this.windowCaptureHandler) {
+            const handler = this.windowCaptureHandler;
+            keyboardEvents.forEach(evt => {
+                window.removeEventListener(evt, handler, true);
+            });
+            this.windowCaptureHandler = null;
+        }
+
+        if (this.shadowHostBubbleHandler && this.shadowHost) {
+            const handler = this.shadowHostBubbleHandler;
+            const host = this.shadowHost;
+            keyboardEvents.forEach(evt => {
+                host.removeEventListener(evt, handler, false);
+            });
+            this.shadowHostBubbleHandler = null;
+        }
+    }
+
+    /**
+     * Set the keyboard event handler for this modal.
+     *
+     * The handler receives every keyboard event that is intercepted while the
+     * modal is active (both from inside the Shadow DOM and from the host page).
+     * Call `e.preventDefault()` for keys you want to fully handle (e.g. Enter,
+     * Escape, arrow keys); otherwise the default action (e.g. typing in a
+     * textarea) is allowed to proceed.
+     *
+     * @param {((e: KeyboardEvent) => void)|null} handler
+     */
+    setKeyHandler(handler) {
+        this.keyHandler = handler;
     }
 
     /**
      * Destroy the modal and clean up
      */
     destroy() {
-        if (this.keydownHandler) {
-            document.removeEventListener('keydown', this.keydownHandler);
-            this.keydownHandler = null;
-        }
+        // Remove keyboard isolation listeners first so no more events fire
+        // while we're tearing down.
+        this.removeKeyboardIsolation();
 
-        // Remove hotkey blocking
-        this.removeHotkeyBlocking();
+        // Remove mouse blocking
+        this.removeMouseBlocking();
 
         if (this.shadowHost && this.shadowHost.parentNode) {
             this.shadowHost.parentNode.removeChild(this.shadowHost);
@@ -208,6 +285,7 @@ class ShadowModal {
 
         this.shadowHost = null;
         this.shadowRoot = null;
+        this.keyHandler = null;
     }
 
     /**

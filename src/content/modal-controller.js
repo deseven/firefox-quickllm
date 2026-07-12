@@ -340,12 +340,8 @@ export class ModalController {
             this.currentStreamId = null;
         }
 
-        // Remove the keydown event listener if it exists
-        const handler = /** @type {any} */ (this.currentModal)._keydownHandler;
-        if (handler) {
-            document.removeEventListener('keydown', handler);
-        }
-
+        // Destroying the modal removes all keyboard isolation listeners and
+        // restores the host page's keyboard functionality.
         this.currentModal.destroy();
         this.currentModal = null;
     }

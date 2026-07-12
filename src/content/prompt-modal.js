@@ -242,11 +242,16 @@ export async function showPromptModal({ text, textType, profile, onClose, onProc
         onCopy(copyBtn);
     });
 
-    // Keyboard shortcuts (document-level so they work regardless of focus)
+    // Keyboard shortcuts — registered via the modal's keyboard isolation
+    // layer so that only our hotkeys work while the modal is active and the
+    // host page's keyboard handlers are completely blocked. The handler
+    // receives events both from inside the Shadow DOM (e.g. typing in the
+    // textarea) and from the host page.
     const handleKeyDown = (/** @type {KeyboardEvent} */ e) => {
         if (!modal) return;
 
-        // Enter: Process or Copy & Close (only if prompt unchanged)
+        // Enter: Process or Copy & Close (only if prompt unchanged).
+        // Shift+Enter is left alone so it inserts a newline in the textarea.
         if (e.key === 'Enter' && !e.shiftKey && !e.altKey) {
             e.preventDefault();
             const currentPrompt = userPromptInput.value.trim();
@@ -266,34 +271,13 @@ export async function showPromptModal({ text, textType, profile, onClose, onProc
             e.preventDefault();
             onClose();
         }
+        // All other keys (including Shift+Enter for newlines, regular
+        // typing, arrow navigation within the textarea, etc.) are allowed
+        // to proceed — the isolation layer ensures they never reach the
+        // host page's listeners.
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    /** @type {any} */ (modal)._keydownHandler = handleKeyDown;
-
-    // Textarea-specific handler (Enter/Escape when focused)
-    userPromptInput.addEventListener('keydown', (/** @type {KeyboardEvent} */ e) => {
-        if (e.key === 'Enter' && !e.shiftKey && !e.altKey) {
-            e.preventDefault();
-            const currentPrompt = userPromptInput.value.trim();
-            const action = resolveEnterAction(
-                hasResponse,
-                hasProcessedOnce,
-                currentPrompt,
-                originalPrompt,
-                copyBtn.style.display !== 'none'
-            );
-            if (action === 'copy') {
-                copyBtn.click();
-            } else {
-                processBtn.click();
-            }
-        } else if (e.key === 'Escape') {
-            e.preventDefault();
-            onClose();
-        }
-        // Shift+Enter is allowed to pass through for line breaks in textarea
-    });
+    modal.setKeyHandler(handleKeyDown);
 
     // Always focus on user prompt input and select all text
     setTimeout(() => {
