@@ -70,6 +70,7 @@ The user prompt adds additional instructions. This is typically not needed, unle
 
 ### Processing Options
 
+- **Show changes (diff) against input:** When enabled, the result is displayed as a diff against the original input, highlighting additions and removals instead of rendering as Markdown.
 - **Process immediately:** Skip profile selection and process automatically, not asking for user prompt
 
 

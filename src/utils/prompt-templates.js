@@ -22,7 +22,7 @@ export const PROMPT_TEMPLATES = [
     },
     {
         name: "Format",
-        prompt: "Format the following text using markdown. Reply only with the Markdown text with no extra comments." + genericSuffix
+        prompt: "Format the following text using Markdown. Reply only with the Markdown text with no extra comments." + genericSuffix
     },
     {
         name: "Translate",

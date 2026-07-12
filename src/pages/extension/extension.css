@@ -10,7 +10,7 @@ body {
 }
 
 .container-fluid {
-    padding: 12px !important;
+    padding: 8px !important;
 }
 
 /* Dark theme support */
@@ -95,16 +95,16 @@ body.dark-theme .response-text {
     width: 100%;
     box-sizing: border-box;
     margin-bottom: 0;
-    padding-top: 4px;
+    padding-top: 2px;
 }
 
 .profile-item {
     border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 8px;
+    border-radius: 6px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
     background: #fff;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     position: relative;
     word-wrap: break-word;
     overflow-wrap: break-word;
@@ -118,19 +118,17 @@ body.dark-theme .response-text {
 
 .profile-item-clickable:hover {
     border-color: #0d6efd;
-    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
-    transform: translateY(-2px);
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.2);
     background: #f8f9fa;
 }
 
 .profile-item-clickable:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.2);
+    box-shadow: 0 1px 3px rgba(13, 110, 253, 0.15);
 }
 
 .profile-item:hover {
     border-color: #0d6efd;
-    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+    box-shadow: 0 1px 4px rgba(13, 110, 253, 0.12);
 }
 
 
@@ -138,11 +136,14 @@ body.dark-theme .response-text {
     display: flex;
     justify-content: between;
     align-items: center;
-    margin-bottom: 8px;
+    gap: 6px;
+    margin-bottom: 0;
 }
 
 .profile-name {
     font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1.2;
     color: #212529;
     margin: 0;
     flex-grow: 1;
@@ -152,12 +153,13 @@ body.dark-theme .response-text {
 }
 
 .profile-type {
-    font-size: 1rem;
-    padding: 4px 8px;
-    border-radius: 12px;
+    font-size: 0.85rem;
+    padding: 2px 6px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .profile-type.openai {
@@ -191,12 +193,14 @@ body.dark-theme .response-text {
 }
 
 .profile-type i {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
 }
 
 .profile-details {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
     color: #6c757d;
+    margin-top: 2px;
     word-wrap: break-word;
     overflow-wrap: break-word;
     min-width: 0;
@@ -205,9 +209,9 @@ body.dark-theme .response-text {
 .profile-model {
     font-family: 'Courier New', monospace;
     background: #f8f9fa;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.8rem;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.72rem;
     word-wrap: break-word;
     overflow-wrap: break-word;
     min-width: 0;
@@ -215,17 +219,10 @@ body.dark-theme .response-text {
     display: inline-block;
 }
 
-/* Fix alignment for header icons */
-h5 i {
-    vertical-align: middle;
-    margin-right: 8px;
-    margin-top: -2px;
-}
-
 /* Fix alignment for button icons */
 .btn i {
     vertical-align: middle;
-    margin-top: -2px;
+    margin-top: -1px;
 }
 
 
@@ -293,6 +290,12 @@ h5 i {
     border-color: #6c757d;
     color: #6c757d;
     transition: all 0.2s ease;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #settingsBtn:hover,
