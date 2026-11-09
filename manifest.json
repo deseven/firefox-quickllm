@@ -19,11 +19,9 @@
     "activeTab",
     "contextMenus",
     "storage",
-    "tabs",
-    "https://api.openai.com/*",
-    "https://api.anthropic.com/*",
     "https://*/*",
-    "http://*/*"
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
   
   "background": {
